@@ -1,0 +1,231 @@
+---
+title: Visualisation des plans de charge
+output: 
+  flexdashboard::flex_dashboard:
+    theme: readable
+    vertical_layout: fill
+    #logo: logo_datactivist.png
+    storyboard: true
+---
+
+<style>
+
+.nav-tabs-custom > .nav-tabs > li.active {
+border-top-color: #E5555C;
+}
+
+body {
+text-align: justify;
+background: #f2f2f2;
+}
+
+.navbar-logo {
+  margin-top: 4px;
+}
+
+.storyboard-nav .sbframelist {
+margin: 0 auto;
+width: 94%;
+height: 50px;
+overflow: hidden;
+text-shadow: none;
+margin-bottom: 8px;
+}
+
+.storyboard-nav .sbnext, .storyboard-nav .sbprev {
+float: left;
+width: 2%;
+height: 45px;
+font-size: 40px;
+}
+
+.column-box {
+background-color: #f2f2f2;
+border-color: #f2f2f2;
+}
+
+.storyboard-nav .sbframelist ul li.active {
+  color: #fff;
+  background: #B8B8B8;
+}
+
+</style>
+
+
+```{r eval=FALSE, include=FALSE}
+# Paramètres des themes : https://github.com/rstudio/flexdashboard/blob/feature/logo-and-favicon/inst/rmarkdown/templates/flex_dashboard/resources/flexdashboard.css 
+# Changer background couleur d'un seul élément (chart) : https://stackoverflow.com/questions/54538451/how-to-add-background-colours-to-boxes-on-rmarkdown-flexdashboard
+```
+
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+knitr::opts_chunk$set(echo = FALSE, 
+                      eval = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE,
+                      collapse = TRUE,  
+                      fig.show = "hold",
+                      out.width = "100%")  # all chunk options at https://yihui.org/knitr/options/
+```
+
+```{r include=FALSE}
+# Packages nécessaires à l'analyse
+packages = c("tidyverse")
+## Installation des packages si besoin et chargement des librairies
+package.check <- lapply(
+  packages,
+  FUN = function(x) {
+    if (!require(x, character.only = TRUE)) {
+      install.packages(x, dependencies = TRUE)
+      library(x, character.only = TRUE)
+    }
+  }
+)
+# Données
+data <- read_csv("project.task.csv") |> 
+    rename(taches = Titre,
+           assigne = `Assigné à`,
+           debut = `Date de début`,
+           fin = `Date de fin`,
+           heures_passees = `Heures passées`,
+           heures_passees_sous_tache = `Heures passées sur les sous-tâches`,
+           heures_prevues = `Heures prévues initialement`,
+           heures_prevues_sous_tache = `Heures prévues sous-tâches`,
+           heures_restantes = `Heures restantes`,
+           tache_parente = `Tâche parente`,
+           assigne_sous_tache = `Sous-tâches/Assigné à`, 
+           etat = `Étiquette d'état Kanban`)
+```
+
+
+Pauline
+=====================================  
+
+```{r data, include=FALSE}
+# Pauline
+pauline <- data |> filter(assigne == "Pauline Breton-Chauvet")
+```
+
+
+
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+**Mon infographie au `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%d %B %Y")`** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+# All icons here : https://ionicons.com/v2/cheatsheet.html or https://fontawesome.com/icons?d=gallery&p=2 
+n1 <- pauline |> distinct(Projet) |> na.omit() |> nrow()
+valueBox(n1, caption="Missions", color = "#CC0033", icon = "ion-android-archive")
+```
+
+### Box 2
+
+```{r echo=FALSE}
+n2 <- pauline |> distinct(taches) |> na.omit() |> nrow()
+valueBox(n2, caption="Tâches ou sous-tâches", color = "#FF9933", icon = "ion-loop")
+```
+
+### Box 3
+
+```{r echo=FALSE}
+n3 <- pauline |> summarise(sum(heures_prevues, na.rm = T))
+valueBox(n3, caption="Heures vendues", color = "#FFCC00", icon = "ion-social-buffer")
+```
+
+### Box 4
+
+```{r echo=FALSE}
+n4 <- pauline |> summarise(sum(heures_passees, na.rm = T))
+valueBox(n4, caption="Heures réalisées", color = "#339900", icon = "ion-filing")
+```
+
+### Box 5
+
+```{r echo=FALSE}
+n5 <- pauline |> summarise(sum(heures_restantes, na.rm = T))
+valueBox(n5, caption="Heures restantes", color = "#009966", icon = "ion-android-calendar")
+```
+
+
+
+Column {data-width=1100}{.tabset}
+-----------------------------------------------------------------------
+
+### Tâches et sous-tâches de travail renseignées
+
+```{r}
+pauline |> filter(!is.na(debut)) |> 
+    ggplot() +
+    geom_segment(aes(
+        x = debut,
+        xend = fin,
+        y = taches,
+        yend = taches,
+        lwd = heures_prevues,
+        col = heures_prevues
+    )) +
+    ggforce::facet_col(facets = vars(Projet), 
+                     scales = "free_y", 
+                     space = "free") +
+    scale_y_discrete(labels = function(x) stringr::str_wrap(x, width = 70)) +
+    scale_color_continuous(high = "#132B43", low = "#56B1F7") +
+    theme_bw() +
+    # theme(#strip.text.y = element_text(angle = 0),
+    #       strip.background = element_blank(),
+    #       strip.text.y = element_blank()) +
+    guides(col = "none", 
+           lwd = guide_legend(title = "Heures vendues")) +
+    geom_vline(aes(xintercept = as.numeric(as.POSIXct(Sys.Date()))), 
+               col = "red", size = .35) +
+    labs(title = paste("Tâches et sous-tâches de travail renseignées au", 
+                       format(as.Date(Sys.Date(), format="%Y-%m-%d %H:%M:%S"),"%d %B %Y")), 
+         x = "", y = "") +
+    geom_text(aes(x = fin, y = taches, 
+                  label = paste0("  ", heures_prevues, "H"), hjust="bottom", col = heures_prevues),
+              size = 3)
+```
+
+
+### Heures prévues, réalisées et restantes des missions
+
+```{r echo=FALSE, fig.height=2}
+pauline |> 
+    filter(etat != "Pret",
+           Projet != "Tâches non facturables à timesheeter") |> 
+    group_by(Projet) |> 
+    mutate(hprevues = sum(heures_prevues),
+           hpassees = sum(heures_passees),
+           hrestantes = sum(heures_restantes),
+           nb_taches = n()) |> 
+    ungroup() |> 
+    distinct(Projet, hprevues, hpassees, hrestantes, debut, fin, nb_taches) |> 
+    pivot_longer(cols = c(hprevues, hpassees, hrestantes), 
+                 names_to = "periode", 
+                 values_to = "heures", 
+                 names_prefix = "h") |> 
+    mutate(periode = case_when(periode == "passees" ~ "réalisées",
+                              periode == "prevues" ~ "prévues",
+                              TRUE ~ periode),
+           periode = factor(periode, ordered = T, levels = c("prévues", "réalisées", "restantes")),
+           Projet = reorder(Projet, heures, desc = T)) |> 
+      ggplot(aes(x=Projet, y = heures, fill = periode, group = periode)) +
+      geom_bar(stat="identity", position = "dodge", width=.6, col = "white", size = .5) +
+      labs(title = paste("Heures prévues, réalisées et restantes des missions au", 
+                           format(as.Date(Sys.Date(), format="%Y-%m-%d %H:%M:%S"),"%d %B %Y")), 
+           y = "Nombre d'heures totales", x = "") +
+      # scale_fill_manual(values = c("réalisées" = "#ee7440", 
+      #                              "prévues" = "#3368cf",
+      #                              "restantes" = "#18ba13")) +
+      scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 70)) +
+      guides(fill = guide_legend(title = "Heures", reverse = F)) +
+      facet_wrap(~Projet, scales = "free_x", labeller = label_wrap_gen(width = 50, multi_line = TRUE)) +
+      theme_bw() +
+      theme(axis.text.x = element_blank(),
+            axis.ticks.x = element_blank())
+```
+
