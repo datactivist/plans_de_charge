@@ -7,34 +7,47 @@ library(plotly)
 #library(bbplot)
 
 # Données
-data <- read_csv("project.task.csv")
-
+data <- read_csv("project.task.csv") |> 
+  rename(taches = Titre,
+         assigne = `Assigné à`,
+         debut = `Date de début`,
+         fin = `Date de fin`,
+         heures_passees = `Heures passées`,
+         heures_passees_sous_tache = `Heures passées sur les sous-tâches`,
+         heures_prevues = `Heures prévues initialement`,
+         heures_prevues_sous_tache = `Heures prévues sous-tâches`,
+         heures_restantes = `Heures restantes`,
+         tache_parente = `Tâche parente`,
+         assigne_sous_tache = `Sous-tâches/Assigné à`, 
+         etat = `Étiquette d'état Kanban`)
 
 # Transformation des données
-data <- data |> rename(taches = Titre,
-                       assigne = `Assigné à`,
-                       debut = `Date de début`,
-                       fin = `Date de fin`,
-                       heures_passees = `Heures passées`,
-                       heures_passees_sous_tache = `Heures passées sur les sous-tâches`,
-                       heures_prevues = `Heures prévues initialement`,
-                       heures_prevues_sous_tache = `Heures prévues sous-tâches`,
-                       heures_restantes = `Heures restantes`,
-                       tache_parente = `Tâche parente`,
-                       assigne_sous_tache = `Sous-tâches/Assigné à`, 
-                       etat = `Étiquette d'état Kanban`)
-diane <- data |> filter(assigne == "Diane Thierry")
-pauline <- data |> filter(assigne == "Pauline Breton-Chauvet")
-anne_laure <- data |> filter(assigne == "Anne-Laure Donzel")
-
-
+cumul_projets <- data |> 
+    filter(etat != "Pret",
+           Projet != "Tâches non facturables à timesheeter") |> 
+    group_by(Projet) |> 
+    mutate(hprevues = sum(heures_prevues),
+           hpassees = sum(heures_passees),
+           hrestantes = sum(heures_restantes),
+           nb_taches = n()) |> 
+    ungroup() |> 
+    distinct(Projet, assigne, hprevues, hpassees, hrestantes, debut, fin, nb_taches) |> 
+    pivot_longer(cols = c(hprevues, hpassees, hrestantes), 
+                 names_to = "periode", 
+                 values_to = "heures", 
+                 names_prefix = "h") |> 
+    mutate(periode = case_when(periode == "passees" ~ "réalisées",
+                              periode == "prevues" ~ "prévues",
+                              TRUE ~ periode),
+           periode = factor(periode, ordered = T, levels = c("prévues", "réalisées", "restantes")),
+           Projet = reorder(Projet, heures, desc = T))
 
 
 #------------ Visualisation n°1
 
 
 
-pauline |> filter(!is.na(debut)) |> 
+data |> filter(assigne == "Anne-Laure Donzel", !is.na(debut)) |> 
     ggplot() +
     geom_segment(aes(
         x = debut,
@@ -73,25 +86,7 @@ pauline |> filter(!is.na(debut)) |>
 
 
 # Graph
-anne_laure |> 
-    filter(etat != "Pret",
-           Projet != "Tâches non facturables à timesheeter") |> 
-    group_by(Projet) |> 
-    mutate(hprevues = sum(heures_prevues),
-           hpassees = sum(heures_passees),
-           hrestantes = sum(heures_restantes),
-           nb_taches = n()) |> 
-    ungroup() |> 
-    distinct(Projet, hprevues, hpassees, hrestantes, debut, fin, nb_taches) |> 
-    pivot_longer(cols = c(hprevues, hpassees, hrestantes), 
-                 names_to = "periode", 
-                 values_to = "heures", 
-                 names_prefix = "h") |> 
-    mutate(periode = case_when(periode == "passees" ~ "réalisées",
-                              periode == "prevues" ~ "prévues",
-                              TRUE ~ periode),
-           periode = factor(periode, ordered = T, levels = c("prévues", "réalisées", "restantes")),
-           Projet = reorder(Projet, heures, desc = T)) |> 
+cumul_projets |> filter(assigne == "Anne-Laure Donzel") |> 
       ggplot(aes(x=Projet, y = heures, fill = periode, group = periode)) +
       geom_bar(stat="identity", position = "dodge", width=.6, col = "white", size = .5) +
       labs(title = paste("Heures prévues, réalisées et restantes des missions au", 
@@ -111,8 +106,9 @@ ggplotly(graph)
 
 
 # Viusalisation n°3
-anne_laure |> 
-    filter(etat != "Pret",
+data |> 
+    filter(assigne == "Anne-Laure Donzel", 
+           etat != "Pret",
            Projet != "Tâches non facturables à timesheeter") |> 
     group_by(Projet) |> 
     mutate(hprevues = sum(heures_prevues),
@@ -144,3 +140,6 @@ ggplotly(graph, tooltip = c("text"))
 
 
 
+
+# Visualisation n°4
+data(df_konj)
