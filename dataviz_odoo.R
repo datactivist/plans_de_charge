@@ -12,19 +12,18 @@ data <- read_csv("project.task.csv") |>
          fin = `Date de fin`,
          tache_parente = `Tâche parente`,
          etat = `Étiquette d'état Kanban`,
-         etape = `Étape`) |> 
-  mutate(assigne = coalesce(`Assigné à`, `Sous-tâches/Assigné à`),
-         heures_prevues = coalesce(`Heures prévues initialement`, `Heures prévues sous-tâches`),
-         heures_passees = coalesce(`Heures passées`, `Heures passées sur les sous-tâches`),
-         heures_restantes = coalesce(`Heures restantes`, `Sous-tâches/Heures restantes`),
-         # test = case_when(!is.na(Titre) & !is.na(`Sous-tâches`) ~ paste(Titre, ":", `Sous-tâches`),
-         #                  !is.na(Titre) & is.na(`Sous-tâches`) ~ `Sous-tâches`,
-         #                  TRUE ~ NA_character_)) |> 
-         type = case_when(!is.na(tache_parente) ~ "Sous-tâche",
-                          !is.na(`Sous-tâches`) ~ "Sous-tâche",
-                          TRUE ~ "Tâche"),
-         taches = coalesce(Titre, `Sous-tâches`)) |> 
-  select(Projet, taches, type, tache_parente, Description, debut, fin, etape, etat, assigne:heures_restantes, `Heures passées`:`Sous-tâches`)
+         etape = `Étape`,
+         todo = Titre,
+         `Heures prévues` = `Heures prévues initialement`) |> 
+  mutate(type = case_when(!is.na(tache_parente) ~ "Sous-tâche", .default = "Tâche"),
+         taches = coalesce(tache_parente, paste0(todo, 1))) |> 
+  select(Projet, todo, type, tache_parente, taches, Description, Progression, debut, fin, etape, etat, `Heures passées`:`Heures restantes`, `Assigné à`) |> 
+  arrange(Projet, taches) |> 
+  group_by(Projet) |> 
+  arrange(desc(taches)) |> 
+  mutate(id = row_number()) |> 
+  mutate(todo = fct_reorder(todo, -id)) |> 
+  ungroup()
 
 
 
@@ -33,14 +32,16 @@ data <- read_csv("project.task.csv") |>
 
 
 
-data |> filter(assigne == "Pauline Breton-Chauvet", !is.na(debut)) |> #Pauline Breton-Chauvet
+data |> 
+  filter(`Assigné à` == "Sarah Bourgouin", !is.na(debut)) |> 
+  mutate(todo = fct_reorder(todo, -id)) |> 
     ggplot() +
     geom_segment(aes(
         x = debut,
         xend = fin,
-        y = taches,
-        yend = taches,
-        lwd = heures_prevues,
+        y = todo,
+        yend = todo,
+        lwd = `Heures prévues`,
         colour = type
     )) +
     ggforce::facet_col(facets = vars(Projet), 
@@ -50,14 +51,14 @@ data |> filter(assigne == "Pauline Breton-Chauvet", !is.na(debut)) |> #Pauline B
     scale_color_manual(values = c("#7bafc5", "#0073a5")) +
     theme_bw() +
     guides(col = guide_legend(title = "", reverse = TRUE, override.aes = list(lwd=2)),
-           lwd = guide_legend(title = "Heures vendues")) +
+           lwd = guide_legend(title = "Heures prévues")) +
     geom_vline(aes(xintercept = as.numeric(as.POSIXct(Sys.Date()))), 
                col = "red", size = .35) +
     labs(title = paste("Tâches et sous-tâches de travail renseignées au", 
                        format(as.Date(Sys.Date(), format="%Y-%m-%d %H:%M:%S"),"%d %B %Y")), 
          x = "", y = "") +
-    geom_text(aes(x = fin, y = taches, 
-                  label = paste0("  ", heures_prevues, "H"), hjust="bottom"),
+    geom_text(aes(x = fin, y = todo, 
+                  label = paste0("  ", `Heures prévues`, "H"), hjust="bottom"),
               size = 3, col = "#333333")
 
 
@@ -68,28 +69,112 @@ data |> filter(assigne == "Pauline Breton-Chauvet", !is.na(debut)) |> #Pauline B
 
 # Tableau des projets
 table_projets <- data |> 
-  select(Projet, taches, type, tache_parente, Description, debut, fin, etape, etat, assigne:heures_restantes) |> 
-  mutate(heures_prevues = round(heures_prevues, 1),
-         heures_passees = round(heures_passees, 1),
-         heures_restantes = round(heures_restantes, 1)) |> 
-  arrange(Projet)
+  mutate(`Heures prévues` = round(`Heures prévues`, 1),
+         `Heures passées` = round(`Heures passées`, 1),
+         `Heures restantes` = round(`Heures restantes`, 1),
+         ` ` = ifelse(type == "Tâche", "clipboard-check", "list-check"),
+         état = case_when(etat == "En cours" ~ "circle", 
+                          etat == "Prêt" ~ "circle-check", 
+                          .default = "circle-xmark")) |> 
+  arrange(Projet, taches) |> 
+  rename(`heures prévues` = `Heures prévues`,
+         `heures réalisées` = `Heures passées`,
+         `heures restantes` = `Heures restantes`,
+         `assigné` = `Assigné à`) |> 
+  mutate(debut = as.Date(debut, format="%Y-%m-%d %H:%M:%S"),"%d-%m-%Y",
+         fin = as.Date(fin, format="%Y-%m-%d %H:%M:%S"),"%d-%m-%Y") |> 
+  select(Projet, ` `, type, todo, debut, fin, `heures prévues`:`heures restantes`, etape, état, `assigné`, id) |> 
+  mutate_all(as.character) |> 
+  mutate_at(vars(everything()), replace_na, replace = "") |> 
+  mutate(`heures restantes` = as.numeric(`heures restantes`)) |> 
+  filter(`assigné` == "Guillaume Martin")
 
-    group_by(Projet) |> 
-    mutate(hprevues = sum(heures_prevues),
-           hpassees = sum(heures_passees),
-           hrestantes = sum(heures_restantes),
-           nb_taches = n()) |> 
-    ungroup() |> 
-    distinct(Projet, assigne, hprevues, hpassees, hrestantes, debut, fin, nb_taches) |> 
-    pivot_longer(cols = c(hprevues, hpassees, hrestantes), 
-                 names_to = "periode", 
-                 values_to = "heures", 
-                 names_prefix = "h") |> 
-    mutate(periode = case_when(periode == "passees" ~ "réalisées",
-                              periode == "prevues" ~ "prévues",
-                              TRUE ~ periode),
-           periode = factor(periode, ordered = T, levels = c("prévues", "réalisées", "restantes")),
-           Projet = reorder(Projet, heures, desc = T))
+# Représentation du tableau
+library(gt)
+library(gtExtras)
+table_projets |> 
+  group_by(Projet) |> 
+  arrange(id) |> 
+  select(-id) |> 
+  gt(groupname_col = "Projet") |>
+  gt_fa_column(column = ` `, direction = 1) |>  #icones
+  gt_fa_column(column = état, direction = 1, height = '15px', prefer_type = "solid",
+               palette = c("circle-check" = "green", "circle" = "#999999", "circle-xmark" = "white")) |>  #icones
+  gt_theme_nytimes() |> 
+  tab_header(title = "Tableau global des tâches et sous-tâches par personne") |>
+  tab_style(  #en gras
+    style = list(cell_text(weight = "bold")),
+    locations = cells_body(
+    columns = Projet)) |>
+  tab_style(  #en gras
+    style = list(cell_text(weight = "bold")),
+    locations = cells_body(
+    columns = `heures restantes`)) |>
+  tab_style(  #en gras
+    style = list(cell_text(color = "#f44336")),
+    locations = cells_body(
+    columns = `heures restantes`,
+    rows = `heures restantes` < 0)) |>
+  tab_style(  #en gras
+    style = list(cell_text(color = "#38761d")),
+    locations = cells_body(
+    columns = `heures restantes`,
+    rows = `heures restantes` >= 0)) |>
+  tab_options(table.font.size = 17,
+              table.border.bottom.width = 1,
+              table.border.bottom.color = "#CCCCCC",
+              row_group.background.color = "grey"
+              )
+  
+
+
+#------------ Visualisation n°3
+
+
+
+# Tableau des heures restantes divisées par mois jusqu'à fin tache / sous-tache
+table_restant_mois <- data |> 
+  filter(`Heures restantes` > 0 & difftime(fin, Sys.time(), units = "weeks") > 0) |> 
+  mutate(today = Sys.Date(),
+         #fin = as
+         nb_week_left = round(as.numeric(difftime(fin, today, units = "weeks")), 0),
+         hours_week_left = `Heures restantes` / nb_week_left) |> 
+  filter(hours_week_left != Inf) |> 
+  select(Projet, todo, `Assigné à`, today, fin, nb_week_left, hours_week_left) |> 
+  group_by(rn = row_number()) %>% 
+  mutate(complete_date = list(seq(as.Date(today), as.Date(fin), by = 7))) |> 
+  unnest()|> ungroup() |> select(-rn) |> 
+  filter(`Assigné à` == "Sarah Bourgouin")
+#pivot_longer(cols = c(today, fin), names_to = "type", values_to = "date") 
+
+
+# Dataviz
+table_restant_mois |> 
+  ggplot(aes(x = complete_date, y = hours_week_left, fill = todo)) +
+  geom_bar(stat = "identity") +
+  geom_hline(aes(yintercept = 30), col = "red", size = .35)
+
+  
+ggplot(aes(x=Projet, y = heures, fill = periode, group = periode)) +
+      geom_bar(stat="identity", position = "dodge", width=.6, col = "white", size = .5) +
+      labs(title = paste("Heures prévues, réalisées et restantes des missions au", 
+                           format(as.Date(Sys.Date(), format="%Y-%m-%d %H:%M:%S"),"%d %B %Y")), 
+           y = "Nombre d'heures totales", x = "") +
+      # scale_fill_manual(values = c("réalisées" = "#ee7440", 
+      #                              "prévues" = "#3368cf",
+      #                              "restantes" = "#18ba13")) +
+      scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 70)) +
+      guides(fill = guide_legend(title = "Heures", reverse = F)) +
+      facet_wrap(~Projet, scales = "free_x", labeller = label_wrap_gen(width = 50, multi_line = TRUE)) +
+      theme_bw() +
+      theme(axis.text.x = element_blank(),
+            axis.ticks.x = element_blank())
+  
+
+
+
+
+
 
 
 
@@ -121,9 +206,9 @@ pauline_ird <- data |>
     filter(etat != "Pret",
            Projet != "Tâches non facturables à timesheeter") |> 
     group_by(taches) |> 
-    mutate(hprevues = sum(heures_prevues),
-           hpassees = sum(heures_passees),
-           hrestantes = sum(heures_restantes),
+    mutate(hprevues = sum(`Heures prévues`),
+           hpassees = sum(`Heures passées`),
+           hrestantes = sum(`Heures restantes`),
            nb_taches = n()) |> 
     ungroup() |> 
     distinct(Projet, taches, assigne, hprevues, hpassees, hrestantes, debut, fin, nb_taches) |> 
@@ -167,9 +252,9 @@ data |>
            etat != "Pret",
            Projet != "Tâches non facturables à timesheeter") |> 
     group_by(Projet) |> 
-    mutate(hprevues = sum(heures_prevues),
-           hpassees = sum(heures_passees),
-           hrestantes = sum(heures_restantes),
+    mutate(hprevues = sum(`Heures prévues`),
+           hpassees = sum(`Heures passées`),
+           hrestantes = sum(`Heures restantes`),
            nb_taches = n()) |> 
     ungroup() |> 
     distinct(Projet, hprevues, hpassees, hrestantes, debut, fin, nb_taches) |> 
