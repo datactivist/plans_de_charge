@@ -68,14 +68,14 @@ data |>
 
 
 # Tableau des projets
-table_projets <- data |> 
+table_projets <- data |> as.data.frame() |> 
   mutate(`Heures prévues` = round(`Heures prévues`, 1),
          `Heures passées` = round(`Heures passées`, 1),
          `Heures restantes` = round(`Heures restantes`, 1),
          ` ` = ifelse(type == "Tâche", "clipboard-check", "list-check"),
          état = case_when(etat == "En cours" ~ "circle", 
                           etat == "Prêt" ~ "circle-check", 
-                          .default = "circle-xmark")) |> 
+                          .default = NA_character_)) |> 
   arrange(Projet, taches) |> 
   rename(`heures prévues` = `Heures prévues`,
          `heures réalisées` = `Heures passées`,
@@ -92,14 +92,15 @@ table_projets <- data |>
 # Représentation du tableau
 library(gt)
 library(gtExtras)
+default_palette <- c("circle-check" = "green", "circle" = "#999999")
 table_projets |> 
   group_by(Projet) |> 
   arrange(id) |> 
   select(-id) |> 
   gt(groupname_col = "Projet") |>
   gt_fa_column(column = ` `, direction = 1) |>  #icones
-  gt_fa_column(column = état, direction = 1, height = '15px', prefer_type = "solid",
-               palette = c("circle-check" = "green", "circle" = "#999999", "circle-xmark" = "white")) |>  #icones
+  gt_fa_column(column = état, direction = 1, height = '15px', prefer_type = "solid", 
+               palette = c("circle-check" = "green", "circle" = "#999999")) |> 
   gt_theme_nytimes() |> 
   tab_header(title = "Tableau global des tâches et sous-tâches par personne") |>
   tab_style(  #en gras
@@ -123,8 +124,7 @@ table_projets |>
   tab_options(table.font.size = 17,
               table.border.bottom.width = 1,
               table.border.bottom.color = "#CCCCCC",
-              row_group.background.color = "grey"
-              )
+              row_group.background.color = "grey")
   
 
 
@@ -132,44 +132,90 @@ table_projets |>
 
 
 
-# Tableau des heures restantes divisées par mois jusqu'à fin tache / sous-tache
-table_restant_mois <- data |> 
-  filter(`Heures restantes` > 0 & difftime(fin, Sys.time(), units = "weeks") > 0) |> 
+# Tableau des heures restantes divisées par semaine jusqu'à fin tache / sous-tache
+table_restant_semaine <- data |> 
+  filter(`Heures restantes` > 0) |> 
   mutate(today = Sys.Date(),
-         #fin = as
          nb_week_left = round(as.numeric(difftime(fin, today, units = "weeks")), 0),
          hours_week_left = `Heures restantes` / nb_week_left) |> 
-  filter(hours_week_left != Inf) |> 
+  filter(nb_week_left > 0) |> 
   select(Projet, todo, `Assigné à`, today, fin, nb_week_left, hours_week_left) |> 
   group_by(rn = row_number()) %>% 
   mutate(complete_date = list(seq(as.Date(today), as.Date(fin), by = 7))) |> 
   unnest()|> ungroup() |> select(-rn) |> 
-  filter(`Assigné à` == "Sarah Bourgouin")
-#pivot_longer(cols = c(today, fin), names_to = "type", values_to = "date") 
-
+  filter(`Assigné à` == "Sarah Bourgouin") |> 
+  mutate(hours_total = ifelse(row_number() == 1, sum(hours_week_left), NA_real_), .by = complete_date) |> 
+  arrange(complete_date) |> 
+  mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total)
 
 # Dataviz
-table_restant_mois |> 
-  ggplot(aes(x = complete_date, y = hours_week_left, fill = todo)) +
+graph <- table_restant_semaine |> 
+  ggplot(aes(x = complete_date, y = hours_week_left, fill = todo, 
+             text = paste0("Todo : ", todo, "\nProjet : ", Projet, "\nTemps : ", round(hours_week_left, 1), 
+                           " heures restantes par semaine \n du ", format(today, '%d %B %Y'), " jusqu'au ", format(fin, '%d %B %Y')))) +
   geom_bar(stat = "identity") +
-  geom_hline(aes(yintercept = 30), col = "red", size = .35)
+  geom_hline(aes(yintercept = round(32*0.857,0)), col = "red", size = .35) + #round(35*0.857,0) pour un temps plein
+  geom_text(aes(x = complete_date, y = hours_total+2, label = paste0(round(hours_total, 0), "H")), 
+            size = 3, vjust = 1) +
+  labs(title = paste("Répartition des heures restantes par tâches et par semaine -", table_restant_semaine[1,3]),
+       y = "Heures restantes vendues par semaine") +
+  scale_y_continuous(breaks = scales::pretty_breaks()) +
+  scale_x_date(date_breaks = "months" , date_labels = "%b-%y") +
+  scale_fill_viridis_d() +
+  guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
+  theme_classic() +
+  theme(axis.title.x = element_blank())
+ggplotly(graph, tooltip = c("text"))
+  
 
   
-ggplot(aes(x=Projet, y = heures, fill = periode, group = periode)) +
-      geom_bar(stat="identity", position = "dodge", width=.6, col = "white", size = .5) +
-      labs(title = paste("Heures prévues, réalisées et restantes des missions au", 
-                           format(as.Date(Sys.Date(), format="%Y-%m-%d %H:%M:%S"),"%d %B %Y")), 
-           y = "Nombre d'heures totales", x = "") +
-      # scale_fill_manual(values = c("réalisées" = "#ee7440", 
-      #                              "prévues" = "#3368cf",
-      #                              "restantes" = "#18ba13")) +
-      scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 70)) +
-      guides(fill = guide_legend(title = "Heures", reverse = F)) +
-      facet_wrap(~Projet, scales = "free_x", labeller = label_wrap_gen(width = 50, multi_line = TRUE)) +
-      theme_bw() +
-      theme(axis.text.x = element_blank(),
-            axis.ticks.x = element_blank())
+
+# Tableau des heures restantes divisées par mois jusqu'à fin tache / sous-tache
+table_restant_mois <- data |> 
+  filter(`Heures restantes` > 0) |> 
+  mutate(today = Sys.Date(),
+         nb_month_left = round(as.numeric(difftime(fin, today, units = "weeks") /4.34524), 0),
+         hours_month_left = case_when(nb_month_left >=1 ~ `Heures restantes` / nb_month_left,
+                                      nb_month_left < 1 ~ `Heures restantes`)) |> 
+  filter(nb_month_left > 0) |> 
+  select(Projet, todo, `Assigné à`, today, fin, nb_month_left, hours_month_left) |> 
+  group_by(rn = row_number()) %>% 
+  mutate(complete_date = list(seq(as.Date(today), as.Date(fin), by = "month"))) |> 
+  unnest()|> ungroup() |> select(-rn) |> 
+  filter(`Assigné à` == "Sarah Bourgouin") |> 
+  mutate(hours_total = ifelse(row_number() == 1, sum(hours_month_left), NA_real_), .by = complete_date) |> 
+  arrange(complete_date) |> 
+  mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total)
+
+# Dataviz
+graph <- table_restant_mois |> 
+  ggplot(aes(x = complete_date, y = hours_month_left, fill = todo, 
+             text = paste0("Todo : ", todo, "\nProjet : ", Projet, "\nTemps : ", round(hours_month_left, 1), 
+                           " heures restantes par mois \n du ", format(today, '%d %B %Y'), " jusqu'au ", format(fin, '%d %B %Y')))) +
+  geom_bar(stat = "identity") +
+  geom_hline(aes(yintercept = round(17*0.857*8,0)), col = "red", size = .35) + #round(21*0.857*7,0)
+  geom_text(aes(x = complete_date, y = hours_total+2, label = paste0(round(hours_total, 0), "H")), 
+            size = 3, vjust = 1) +
+  labs(title = paste("Répartition des heures restantes par tâches et par mois au", format(Sys.Date(), '%d %B %Y'), "-", table_restant_mois[1,3]),
+       y = "Heures restantes vendues par mois") +
+  scale_y_continuous(breaks = scales::pretty_breaks()) +
+  scale_x_date(date_breaks = "months" , date_labels = "%b-%y") +
+  scale_fill_viridis_d() +
+  guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
+  theme_classic() +
+  theme(axis.title.x = element_blank())
+ggplotly(graph, tooltip = c("text"))
   
+
+
+
+
+
+
+
+
+
+
 
 
 
