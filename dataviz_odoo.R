@@ -87,12 +87,11 @@ table_projets <- data |> as.data.frame() |>
   mutate_all(as.character) |> 
   mutate_at(vars(everything()), replace_na, replace = "") |> 
   mutate(`heures restantes` = as.numeric(`heures restantes`)) |> 
-  filter(`assigné` == "Guillaume Martin")
+  filter(`assigné` == "Sarah Bourgouin")
 
 # Représentation du tableau
 library(gt)
 library(gtExtras)
-default_palette <- c("circle-check" = "green", "circle" = "#999999")
 table_projets |> 
   group_by(Projet) |> 
   arrange(id) |> 
@@ -165,7 +164,8 @@ graph <- table_restant_semaine |>
   guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
   theme_classic() +
   theme(axis.title.x = element_blank())
-ggplotly(graph, tooltip = c("text"))
+ggplotly(graph, tooltip = c("text")) |> 
+    layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
   
 
   
@@ -187,6 +187,39 @@ table_restant_mois <- data |>
   arrange(complete_date) |> 
   mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total)
 
+# transfo table
+test <- table_restant_mois %>%
+  mutate(name = paste(Projet, todo),
+         model = todo) |> 
+  bind_rows(table_restant_mois %>% count(Projet) %>% mutate(model = Projet, name = "")) %>%
+  arrange(Projet, name) %>%
+  mutate(name_fct = fct_inorder(if_else(name == "", Projet, paste0("- ", model))),
+         todo = case_when(is.na(todo) ~ Projet, .default = todo))
+
+test |> 
+  ggplot(aes(x = complete_date, y = hours_month_left, fill = name_fct)) +
+  geom_bar(stat = "identity") +
+  scale_color_discrete(name = "Car")  +
+  guides(color = guide_legend(title = "test",
+                             override.aes = list(alpha = test$name != "")))
+
+  geom_hline(aes(yintercept = round(17*0.857*8,0)), col = "red", size = .35) + #round(21*0.857*7,0)
+  geom_text(aes(x = complete_date, y = hours_total+2, label = paste0(round(hours_total, 0), "H")), 
+            size = 3, vjust = 1) +
+  labs(title = paste("Répartition des heures restantes par tâches et par mois au", format(Sys.Date(), '%d %B %Y'), "-", table_restant_mois[1,3]),
+       y = "Heures restantes vendues par mois") +
+  scale_y_continuous(breaks = scales::pretty_breaks()) +
+  scale_x_date(date_breaks = "months" , date_labels = "%b-%y") +
+  scale_fill_viridis_d() +
+  guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
+  theme_classic() +
+  theme(axis.title.x = element_blank())
+ggplotly(graph, tooltip = c("text")) |> 
+    layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+  
+
+
+
 # Dataviz
 graph <- table_restant_mois |> 
   ggplot(aes(x = complete_date, y = hours_month_left, fill = todo, 
@@ -204,7 +237,8 @@ graph <- table_restant_mois |>
   guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
   theme_classic() +
   theme(axis.title.x = element_blank())
-ggplotly(graph, tooltip = c("text"))
+ggplotly(graph, tooltip = c("text")) |> 
+    layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
   
 
 
