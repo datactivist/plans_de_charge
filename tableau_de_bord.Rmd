@@ -75,7 +75,7 @@ knitr::opts_chunk$set(echo = FALSE,
 
 ```{r include=FALSE}
 # Packages nécessaires à l'analyse
-packages = c("tidyverse", "plotly", "gt", "gtExtras")
+packages = c("tidyverse", "plotly", "gt", "gtExtras", "tm", "ggwordcloud")
 ## Installation des packages si besoin et chargement des librairies
 package.check <- lapply(
   packages,
@@ -104,6 +104,196 @@ data <- read_csv("project.task.csv") |>
   mutate(id = row_number()) |> 
   mutate(todo = fct_reorder(todo, -id)) |> 
   ungroup()
+```
+
+
+Datactivist
+=====================================  
+
+
+
+Column {data-width=100}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+# All icons here : https://ionicons.com/v2/cheatsheet.html or https://fontawesome.com/icons?d=gallery&p=2 
+en_cours <- data |> filter(debut <= Sys.Date() & fin >= Sys.Date())
+n1 <- en_cours |> distinct(Projet) |> na.omit() |> nrow()
+valueBox(n1, caption = ifelse(n1 > 1, "Missions", "Mission"), color = "#CC0033")
+```
+
+### Box 2
+
+```{r echo=FALSE}
+n2 <- en_cours |> distinct(taches) |> na.omit() |> nrow()
+valueBox(n2, caption = ifelse(n2 > 1, "Tâches ou sous-tâches", "Tâche ou sous-tâche"), color = "#FF9933")
+```
+
+
+### Box 3
+
+```{r echo=FALSE}
+n3 <- en_cours |> summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
+valueBox(n3, caption = ifelse(n3 > 1, "Jours vendus", "Jour vendu"), color = "#FFCC00") 
+```
+
+
+### Box 4
+
+```{r echo=FALSE}
+n4 <- en_cours |> summarise(round(sum(`Heures prévues`, na.rm = T), 0))
+valueBox(n4, caption = ifelse(n4 > 1, "Heures vendues", "Heure vendue"), color = "#339900")
+```
+
+### Box 5
+
+```{r echo=FALSE}
+n5 <- en_cours |> summarise(round(sum(`Heures passées`, na.rm = T), 0))
+valueBox(n5, caption = ifelse(n5 > 1, "Heures réalisées", "Heure réalisée"), color = "#009966")
+```
+
+### Box 6
+
+```{r echo=FALSE}
+n6 <- en_cours |> summarise(round(sum(`Heures restantes`, na.rm = T), 0))
+valueBox(n6, caption = ifelse(n6 > 1, "Heures restantes", "Heure restante"), color = "#0066CC")
+```
+
+
+
+
+Column {data-width=100}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+# All icons here : https://ionicons.com/v2/cheatsheet.html or https://fontawesome.com/icons?d=gallery&p=2 
+annee <- data |> filter(debut >= "2023-01-01")
+n7 <- annee |> distinct(Projet) |> na.omit() |> nrow()
+valueBox(n7, caption = ifelse(n7 > 1, "Missions", "Mission"), color = "#CC0033")
+```
+
+### Box 2
+
+```{r echo=FALSE}
+n8 <- annee |> distinct(taches) |> na.omit() |> nrow()
+valueBox(n8, caption = ifelse(n8 > 1, "Tâches ou sous-tâches", "Tâche ou sous-tâche"), color = "#FF9933")
+```
+
+
+### Box 3
+
+```{r echo=FALSE}
+n9 <- annee |> summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
+valueBox(n9, caption = ifelse(n9 > 1, "Jours vendus", "Jour vendu"), color = "#FFCC00") 
+```
+
+
+### Box 4
+
+```{r echo=FALSE}
+n10 <- annee |> summarise(round(sum(`Heures prévues`, na.rm = T), 0))
+valueBox(n10, caption = ifelse(n4 > 1, "Heures vendues", "Heure vendue"), color = "#339900")
+```
+
+### Box 5
+
+```{r echo=FALSE}
+n11 <- annee |> summarise(round(sum(`Heures passées`, na.rm = T), 0))
+valueBox(n11, caption = ifelse(n11 > 1, "Heures réalisées", "Heure réalisée"), color = "#009966")
+```
+
+### Box 6
+
+```{r echo=FALSE}
+n12 <- annee |> summarise(round(sum(`Heures restantes`, na.rm = T), 0))
+valueBox(n12, caption = ifelse(n12 > 1, "Heures restantes", "Heure restante"), color = "#0066CC")
+```
+
+
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Les projets
+
+```{r include=FALSE}
+  # preparation des données
+data_wordcloud <- glimpse(data)
+corpus = Corpus(VectorSource(data_wordcloud$Projet))
+  # mise en forme des mots
+corpus = tm_map(corpus, PlainTextDocument) #Conversion to Lowercase
+corpus = tm_map(corpus, tolower)
+corpus = tm_map(corpus, removePunctuation) #Removing Punctuation
+  # retrait des mots non désirés (pronoms, auxiliaires etc.)
+ajout_stopwords <- c("d'", "d", "article", "articles", "Service producteur inconnu", "’")
+remix_stopwords <- c(ajout_stopwords, stopwords("french"))  # adding own undesired words to stopwords
+corpus = tm_map(corpus, removeWords, c("cloth", remix_stopwords)) #Remove stopwords
+corpus = tm_map(corpus, stripWhitespace) # Eliminate white spaces
+corpus[[1]][1] 
+  # bon format du df
+DTM <- TermDocumentMatrix(corpus)
+mat <- as.matrix(DTM)
+f <- sort(rowSums(mat),decreasing=TRUE) 
+word_data <- data.frame(word = names(f),freq=f)
+```
+
+```{r echo=FALSE}
+word_data |> 
+  head(100) |> 
+  ggplot(aes(label = word, size = freq)) +
+          geom_text_wordcloud(color = rep_len(c('#173541','#E95459'), 100), family = "Montserrat") +
+          scale_size_area(max_size = 15) +
+          theme_minimal() +
+          theme(plot.title = element_text(face = "bold", size = 15),
+                plot.subtitle = element_text(margin = margin(t = 0, r = 0, b = -60, l = 0)))
+```
+
+
+### Les tâches et sous-tâches
+
+```{r include=FALSE}
+  # preparation des données
+data_wordcloud <- glimpse(data)
+corpus = Corpus(VectorSource(data_wordcloud$todo))
+  # mise en forme des mots
+corpus = tm_map(corpus, PlainTextDocument) #Conversion to Lowercase
+corpus = tm_map(corpus, tolower)
+corpus = tm_map(corpus, removePunctuation) #Removing Punctuation
+  # retrait des mots non désirés (pronoms, auxiliaires etc.)
+ajout_stopwords <- c("d'", "d", "article", "articles", "Service producteur inconnu", "’")
+remix_stopwords <- c(ajout_stopwords, stopwords("french"))  # adding own undesired words to stopwords
+corpus = tm_map(corpus, removeWords, c("cloth", remix_stopwords)) #Remove stopwords
+corpus = tm_map(corpus, stripWhitespace) # Eliminate white spaces
+corpus[[1]][1] 
+  # bon format du df
+DTM <- TermDocumentMatrix(corpus)
+mat <- as.matrix(DTM)
+f <- sort(rowSums(mat),decreasing=TRUE) 
+word_data <- data.frame(word = names(f),freq=f)
+```
+
+```{r echo=FALSE}
+word_data |> 
+  head(60) |> 
+  ggplot(aes(label = word, size = freq)) +
+          geom_text_wordcloud(color = rep_len(c('#173541','#E95459'), 60), family = "Montserrat") +
+          scale_size_area(max_size = 15) +
+          theme_minimal() +
+          theme(plot.title = element_text(face = "bold", size = 15),
+                plot.subtitle = element_text(margin = margin(t = 0, r = 0, b = -60, l = 0)))
 ```
 
 
