@@ -99,7 +99,8 @@ table_projets |>
   gt(groupname_col = "Projet") |>
   gt_fa_column(column = ` `, direction = 1) |>  #icones
   gt_fa_column(column = état, direction = 1, height = '15px', prefer_type = "solid", 
-               palette = c("circle-check" = "green", "circle" = "#999999")) |> 
+               palette = if (all(table_projets$état == "circle")) "#999999" 
+               else if (all(table_projets$état == "circle-check")) "green" else c("circle" = "#999999", "circle-check" = "green")) |> 
   gt_theme_nytimes() |> 
   tab_header(title = "Tableau global des tâches et sous-tâches par personne") |>
   tab_style(  #en gras
@@ -145,7 +146,8 @@ table_restant_semaine <- data |>
   filter(`Assigné à` == "Sarah Bourgouin") |> 
   mutate(hours_total = ifelse(row_number() == 1, sum(hours_week_left), NA_real_), .by = complete_date) |> 
   arrange(complete_date) |> 
-  mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total)
+  mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total) |> 
+  mutate(todo = paste0(Projet, "\n", todo))
 
 # Dataviz
 graph <- table_restant_semaine |> 
@@ -185,40 +187,8 @@ table_restant_mois <- data |>
   filter(`Assigné à` == "Sarah Bourgouin") |> 
   mutate(hours_total = ifelse(row_number() == 1, sum(hours_month_left), NA_real_), .by = complete_date) |> 
   arrange(complete_date) |> 
-  mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total)
-
-# transfo table
-test <- table_restant_mois %>%
-  mutate(name = paste(Projet, todo),
-         model = todo) |> 
-  bind_rows(table_restant_mois %>% count(Projet) %>% mutate(model = Projet, name = "")) %>%
-  arrange(Projet, name) %>%
-  mutate(name_fct = fct_inorder(if_else(name == "", Projet, paste0("- ", model))),
-         todo = case_when(is.na(todo) ~ Projet, .default = todo))
-
-test |> 
-  ggplot(aes(x = complete_date, y = hours_month_left, fill = name_fct)) +
-  geom_bar(stat = "identity") +
-  scale_color_discrete(name = "Car")  +
-  guides(color = guide_legend(title = "test",
-                             override.aes = list(alpha = test$name != "")))
-
-  geom_hline(aes(yintercept = round(17*0.857*8,0)), col = "red", size = .35) + #round(21*0.857*7,0)
-  geom_text(aes(x = complete_date, y = hours_total+2, label = paste0(round(hours_total, 0), "H")), 
-            size = 3, vjust = 1) +
-  labs(title = paste("Répartition des heures restantes par tâches et par mois au", format(Sys.Date(), '%d %B %Y'), "-", table_restant_mois[1,3]),
-       y = "Heures restantes vendues par mois") +
-  scale_y_continuous(breaks = scales::pretty_breaks()) +
-  scale_x_date(date_breaks = "months" , date_labels = "%b-%y") +
-  scale_fill_viridis_d() +
-  guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
-  theme_classic() +
-  theme(axis.title.x = element_blank())
-ggplotly(graph, tooltip = c("text")) |> 
-    layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
-  
-
-
+  mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total) |> 
+  mutate(todo = paste0(Projet, "\n", todo))
 
 # Dataviz
 graph <- table_restant_mois |> 
