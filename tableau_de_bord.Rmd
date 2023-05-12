@@ -88,16 +88,19 @@ package.check <- lapply(
 )
 # Données
 data <- read_csv("project.task.csv") |> 
-  rename(debut = `Date de début`,
+  rename(debut_projet = `Projet/Date de début`,
+         fin_projet = `Projet/Date de fin de validité`,
+         debut = `Date de début`,
          fin = `Date de fin`,
          tache_parente = `Tâche parente`,
          etat = `Étiquette d'état Kanban`,
+         label = `Étiquettes`,
          etape = `Étape`,
          todo = Titre,
          `Heures prévues` = `Heures prévues initialement`) |> 
   mutate(type = case_when(!is.na(tache_parente) ~ "Sous-tâche", .default = "Tâche"),
          taches = coalesce(tache_parente, paste0(todo, 1))) |> 
-  select(Projet, todo, type, tache_parente, taches, Description, Progression, debut, fin, etape, etat, `Heures passées`:`Heures restantes`, `Assigné à`) |> 
+  select(Projet, debut_projet, fin_projet, todo, type, tache_parente, taches, Description, Progression, debut, fin, etape, etat, label, `Heures passées`:`Heures restantes`, `Assigné à`, Facturable) |> 
   arrange(Projet, taches) |> 
   group_by(Projet) |> 
   arrange(desc(taches)) |> 
@@ -303,6 +306,7 @@ Sarah
 ```{r}
 # sarah
 sarah <- data |> filter(`Assigné à` == "Sarah Bourgouin")
+#diane <- data |> filter(`Assigné à` == "Diane Thierry") |> arrange(Projet)
 ```
 
 
