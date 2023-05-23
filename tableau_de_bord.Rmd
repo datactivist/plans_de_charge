@@ -399,8 +399,12 @@ ggplotly(graph, tooltip = c("text"))
 Sarah
 =====================================  
 
-```{r data salarié}
-sarah <- data |> filter(`Assigné à` == "Sarah Bourgouin")
+```{r}
+salarie <- data |> filter(`Assigné à` == "Sarah Bourgouin")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
 ```
 
 
@@ -415,51 +419,60 @@ Column {data-width=190}
 
 ```{r echo=FALSE}
 # All icons here : https://ionicons.com/v2/cheatsheet.html or https://fontawesome.com/icons?d=gallery&p=2 
-en_cours <- sarah |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
-                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
-                            .by = Projet)
-n1 <- en_cours |> distinct(Projet) |> na.omit() |> nrow()
-valueBox(n1, color = "#CC0033", caption = ifelse(n1 > 1, "Missions", "Mission"))
+box1 <- function(data){
+  n1 <- data |> distinct(Projet) |> na.omit() |> nrow()
+  valueBox(n1, color = "#CC0033", caption = ifelse(n1 > 1, "Missions", "Mission"))
+}
+box1(en_cours)
 ```
 
 ### Box 2
 
 ```{r echo=FALSE}
-n2 <- en_cours |> summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
-n2_factures <- en_cours |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
-valueBox(n2, color = "#FF9933", 
-         caption = ifelse(n2 > 1, paste("Jours prévus dont", n2_factures, "facturés"), paste("Jour prévu dont", n2_factures, "facturé"))) 
+box2 <- function(data){
+  n2 <- data |> summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
+  n2_factures <- data |> 
+    filter(Projet != "Tâches non facturables à timesheeter",
+           label != "Heures supplémentaires" | is.na(label),
+           Facturable == TRUE) |> 
+    summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
+  valueBox(n2, color = "#FF9933", 
+           caption = ifelse(n2 > 1, paste("Jours prévus dont", n2_factures, "facturés"), paste("Jour prévu dont", n2_factures, "facturé"))) 
+}
+box2(en_cours)
 ```
 
 ### Box 3
 
 ```{r echo=FALSE}
-n3 <- en_cours |> summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
-n3_factures <- en_cours |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  filter_all(all_vars(!grepl("déplacement|deplacement|Déplacement|Deplacement", .))) |> 
-  summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
-valueBox(n3, color = "#FFCC00", 
-         caption = ifelse(n3 > 1, paste("Jours réalisés dont", n3_factures, "facturés"), paste("Jour réalisé dont", n3_factures, "facturé")))
+box3 <- function(data){
+  n3 <- data |> summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
+  n3_factures <- data |> 
+    filter(Projet != "Tâches non facturables à timesheeter",
+           label != "Heures supplémentaires" | is.na(label),
+           Facturable == TRUE) |> 
+    filter_all(all_vars(!grepl("déplacement|deplacement|Déplacement|Deplacement", .))) |> 
+    summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
+  valueBox(n3, color = "#FFCC00", 
+           caption = ifelse(n3 > 1, paste("Jours réalisés dont", n3_factures, "facturés"), paste("Jour réalisé dont", n3_factures, "facturé")))
+}
+box3(en_cours)
 ```
 
 ### Box 4
 
 ```{r echo=FALSE}
-n4 <- en_cours |> summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
-n4_factures <- en_cours |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
-valueBox(n4, color = "#339900", 
-         caption = ifelse(n4 > 1, paste("Jours restants dont", n4_factures, "facturés"), paste("Jour restant dont", n4_factures, "facturé")))
+box4 <- function(data){
+  n4 <- data |> summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
+  n4_factures <- data |> 
+    filter(Projet != "Tâches non facturables à timesheeter",
+           label != "Heures supplémentaires" | is.na(label),
+           Facturable == TRUE) |> 
+    summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
+  valueBox(n4, color = "#339900", 
+           caption = ifelse(n4 > 1, paste("Jours restants dont", n4_factures, "facturés"), paste("Jour restant dont", n4_factures, "facturé")))
+}
+box4(en_cours)
 ```
 
 
@@ -472,52 +485,63 @@ Column {data-width=190}
 
 
 
-### Box 1
+### Box 5
 
 ```{r echo=FALSE}
-annee <- sarah |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
-n5 <- annee |> distinct(Projet) |> na.omit() |> nrow()
-valueBox(n5, color = "#CC0033", caption = ifelse(n5 > 1, "Missions", "Mission"))
+box5 <- function(data){
+  n5 <- data |> distinct(Projet) |> na.omit() |> nrow()
+  valueBox(n5, color = "#CC0033", caption = ifelse(n5 > 1, "Missions", "Mission"))
+}
+box5(annee)
 ```
 
-### Box 2
+### Box 6
 
 ```{r echo=FALSE}
-n6 <- annee |> summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
-n6_factures <- annee |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
-valueBox(n6, color = "#FF9933", 
-         caption = ifelse(n6 > 1, paste("Jours prévus dont", n6_factures, "facturés"), paste("Jour prévu dont", n6_factures, "facturé"))) 
+box6 <- function(data){
+  n6 <- data |> summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
+  n6_factures <- data |> 
+    filter(Projet != "Tâches non facturables à timesheeter",
+           label != "Heures supplémentaires" | is.na(label),
+           Facturable == TRUE) |> 
+    summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
+  valueBox(n6, color = "#FF9933", 
+           caption = ifelse(n6 > 1, paste("Jours prévus dont", n6_factures, "facturés"), paste("Jour prévu dont", n6_factures, "facturé"))) 
+}
+box6(annee)
 ```
 
-### Box 3
+### Box 7
 
 ```{r echo=FALSE}
-n7 <- annee |> summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
-n7_factures <- annee |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  filter_all(all_vars(!grepl("déplacement|deplacement|Déplacement|Deplacement", .))) |> 
-  summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
-valueBox(n7, color = "#FFCC00", 
-         caption = ifelse(n7 > 1, paste("Jours réalisés dont", n7_factures, "facturés"), paste("Jour réalisé dont", n7_factures, "facturé")))
+box7 <- function(data){
+  n7 <- data |> summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
+  n7_factures <- data |> 
+    filter(Projet != "Tâches non facturables à timesheeter",
+           label != "Heures supplémentaires" | is.na(label),
+           Facturable == TRUE) |> 
+    filter_all(all_vars(!grepl("déplacement|deplacement|Déplacement|Deplacement", .))) |> 
+    summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
+  valueBox(n7, color = "#FFCC00", 
+           caption = ifelse(n7 > 1, paste("Jours réalisés dont", n7_factures, "facturés"), paste("Jour réalisé dont", n7_factures, "facturé")))
+}
+box7(annee)
 ```
 
-### Box 4
+### Box 8
 
 ```{r echo=FALSE}
-n8 <- annee |> summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
-n8_factures <- annee |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
-valueBox(n8, color = "#339900", 
-         caption = ifelse(n8 > 1, paste("Jours restants dont", n8_factures, "facturés"), paste("Jour restant dont", n8_factures, "facturé")))
+box8 <- function(data){
+  n8 <- data |> summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
+  n8_factures <- data |> 
+    filter(Projet != "Tâches non facturables à timesheeter",
+           label != "Heures supplémentaires" | is.na(label),
+           Facturable == TRUE) |> 
+    summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
+  valueBox(n8, color = "#339900", 
+           caption = ifelse(n8 > 1, paste("Jours restants dont", n8_factures, "facturés"), paste("Jour restant dont", n8_factures, "facturé")))
+}
+box8(annee)
 ```
 
 
@@ -532,87 +556,93 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r echo=FALSE, fig.height=2}
-# Tableau des projets
-table_projets <- en_cours |> as.data.frame() |> 
-  mutate(`Heures prévues` = round(`Heures prévues`, 1),
-         `Heures passées` = round(`Heures passées`, 1),
-         `Heures restantes` = round(`Heures restantes`, 1),
-         ` ` = ifelse(type == "Tâche", "clipboard-check", "list-check"),
-         état = case_when(etat == "En cours" ~ "circle", 
-                          etat == "Prêt" ~ "circle-check", 
-                          .default = NA_character_)) |> 
-  arrange(Projet, taches) |> 
-  rename(`heures prévues` = `Heures prévues`,
-         `heures réalisées` = `Heures passées`,
-         `heures restantes` = `Heures restantes`,
-         `assigné` = `Assigné à`) |> 
-  mutate(debut = as.Date(debut, format="%Y-%m-%d %H:%M:%S"),"%d-%m-%Y",
-         fin = as.Date(fin, format="%Y-%m-%d %H:%M:%S"),"%d-%m-%Y") |> 
-  select(Projet, ` `, type, todo, debut, fin, `heures prévues`:`heures restantes`, etape, état, `assigné`, id) |> 
-  mutate_all(as.character) |> 
-  mutate_at(vars(everything()), replace_na, replace = "") |> 
-  mutate(`heures restantes` = as.numeric(`heures restantes`))
-
-# Représentation du tableau
-table_projets |> 
-  group_by(Projet) |> 
-  arrange(id) |> 
-  select(-id) |> 
-  gt(groupname_col = "Projet") |>
-  gt_fa_column(column = ` `, direction = 1, palette = c("clipboard-check" = "black", "list-check" = "#e69f00")) |>  #icones
-  gt_fa_column(column = état, direction = 1, height = '15px', prefer_type = "solid", 
-               palette = if (all(table_projets$état == "circle")) "#999999" 
-               else if (all(table_projets$état == "circle-check")) "green" else c("circle" = "#999999", "circle-check" = "green")) |> 
-  gt_theme_nytimes() |> 
-  tab_header(title = "Tableau global des tâches et sous-tâches en cours") |>
-  tab_style(  #en gras
-    style = list(cell_text(weight = "bold")),
-    locations = cells_body(
-    columns = Projet)) |>
-  tab_style(  #en gras
-    style = list(cell_text(weight = "bold")),
-    locations = cells_body(
-    columns = `heures restantes`)) |>
-  tab_style(  #en gras
-    style = list(cell_text(color = "#f44336")),
-    locations = cells_body(
-    columns = `heures restantes`,
-    rows = `heures restantes` < 0)) |>
-  tab_style(  #en gras
-    style = list(cell_text(color = "#38761d")),
-    locations = cells_body(
-    columns = `heures restantes`,
-    rows = `heures restantes` >= 0)) |>
-  tab_options(table.font.size = 17,
-              table.border.bottom.width = 1,
-              table.border.bottom.color = "#CCCCCC",
-              row_group.background.color = "grey")
+tableau_global <- function(data){
+  # Tableau des projets
+  table_projets <- data |> as.data.frame() |> 
+    mutate(`Heures prévues` = round(`Heures prévues`, 1),
+           `Heures passées` = round(`Heures passées`, 1),
+           `Heures restantes` = round(`Heures restantes`, 1),
+           ` ` = ifelse(type == "Tâche", "clipboard-check", "list-check"),
+           état = case_when(etat == "En cours" ~ "circle", 
+                            etat == "Prêt" ~ "circle-check", 
+                            .default = NA_character_)) |> 
+    arrange(Projet, taches) |> 
+    rename(`heures prévues` = `Heures prévues`,
+           `heures réalisées` = `Heures passées`,
+           `heures restantes` = `Heures restantes`,
+           `assigné` = `Assigné à`) |> 
+    mutate(debut = as.Date(debut, format="%Y-%m-%d %H:%M:%S"),"%d-%m-%Y",
+           fin = as.Date(fin, format="%Y-%m-%d %H:%M:%S"),"%d-%m-%Y") |> 
+    select(Projet, ` `, type, todo, debut, fin, `heures prévues`:`heures restantes`, etape, état, `assigné`, id) |> 
+    mutate_all(as.character) |> 
+    mutate_at(vars(everything()), replace_na, replace = "") |> 
+    mutate(`heures restantes` = as.numeric(`heures restantes`))
+  
+  # Représentation du tableau
+  table_projets |> 
+    group_by(Projet) |> 
+    arrange(id) |> 
+    select(-id) |> 
+    gt(groupname_col = "Projet") |>
+    gt_fa_column(column = ` `, direction = 1, palette = c("clipboard-check" = "black", "list-check" = "#e69f00")) |>  #icones
+    gt_fa_column(column = état, direction = 1, height = '15px', prefer_type = "solid", 
+                 palette = if (all(table_projets$état == "circle")) "#999999" 
+                 else if (all(table_projets$état == "circle-check")) "green" else c("circle" = "#999999", "circle-check" = "green")) |> 
+    gt_theme_nytimes() |> 
+    tab_header(title = "Tableau global des tâches et sous-tâches en cours") |>
+    tab_style(  #en gras
+      style = list(cell_text(weight = "bold")),
+      locations = cells_body(
+      columns = Projet)) |>
+    tab_style(  #en gras
+      style = list(cell_text(weight = "bold")),
+      locations = cells_body(
+      columns = `heures restantes`)) |>
+    tab_style(  #en gras
+      style = list(cell_text(color = "#f44336")),
+      locations = cells_body(
+      columns = `heures restantes`,
+      rows = `heures restantes` < 0)) |>
+    tab_style(  #en gras
+      style = list(cell_text(color = "#38761d")),
+      locations = cells_body(
+      columns = `heures restantes`,
+      rows = `heures restantes` >= 0)) |>
+    tab_options(table.font.size = 17,
+                table.border.bottom.width = 1,
+                table.border.bottom.color = "#CCCCCC",
+                row_group.background.color = "grey")
+}
+tableau_global(en_cours)
 ```
 
 
 ### Heures prévues
 
 ```{r fig.width=15, fig.height=7}
-graph <- sarah |> 
-  filter(!is.na(debut) & etat_projet != "Terminé") |> 
-  mutate(nb_jours = round(as.numeric(difftime(fin, debut, units = "days"))*Progression/100, 0),
-         fin_réalisé = as.POSIXct(as.mondate(debut, timeunits = "days") + nb_jours),
-         todo = fct_reorder(todo, -id)) |> 
-  rename(fin_restant = fin) |> 
-  pivot_longer(cols = c("fin_restant", "fin_réalisé"), names_prefix = "fin_", names_to = "prog", values_to = "fin") |> 
-  ggplot() +
-    geom_segment(aes(x = debut, xend = fin, y = todo, yend = todo, lwd = `Heures prévues`, colour = prog)) +
-    geom_text(aes(x = fin, y = todo, label = ifelse(prog == "restant", paste0("  ", `Heures prévues`, "H"), NA), hjust="bottom"), 
-              size = 3, col = "#333333") +
-    geom_vline(aes(xintercept = as.numeric(as.POSIXct(Sys.Date()))), col = "black", size = .35) +
-    labs(title = "Heures prévues par tâches et sous-tâches des projets", x = "", y = "") +
-    ggforce::facet_col(facets = vars(Projet), scales = "free_y", space = "free") +
-    scale_y_discrete(labels = function(x) stringr::str_wrap(x, width = 70)) +
-    scale_color_manual(values = c("réalisé" = "#51c230", "restant" = "#da4729")) +
-    guides(col = guide_legend(title = "Progression", override.aes = list(lwd=2)),
-           lwd = guide_legend(title = "Heures prévues")) +
-    theme_bw()
-girafe(print(graph), width_svg = 15, height_svg = 10)
+heures_prevues <- function(data){
+  graph <- data |> 
+    filter(!is.na(debut) & etat_projet != "Terminé") |> 
+    mutate(nb_jours = round(as.numeric(difftime(fin, debut, units = "days"))*Progression/100, 0),
+           fin_réalisé = as.POSIXct(as.mondate(debut, timeunits = "days") + nb_jours),
+           todo = fct_reorder(todo, -id)) |> 
+    rename(fin_restant = fin) |> 
+    pivot_longer(cols = c("fin_restant", "fin_réalisé"), names_prefix = "fin_", names_to = "prog", values_to = "fin") |> 
+    ggplot() +
+      geom_segment(aes(x = debut, xend = fin, y = todo, yend = todo, lwd = `Heures prévues`, colour = prog)) +
+      geom_text(aes(x = fin, y = todo, label = ifelse(prog == "restant", paste0("  ", `Heures prévues`, "H"), NA), hjust="bottom"), 
+                size = 3, col = "#333333") +
+      geom_vline(aes(xintercept = as.numeric(as.POSIXct(Sys.Date()))), col = "black", size = .35) +
+      labs(title = "Heures prévues par tâches et sous-tâches des projets", x = "", y = "") +
+      ggforce::facet_col(facets = vars(Projet), scales = "free_y", space = "free") +
+      scale_y_discrete(labels = function(x) stringr::str_wrap(x, width = 70)) +
+      scale_color_manual(values = c("réalisé" = "#51c230", "restant" = "#da4729")) +
+      guides(col = guide_legend(title = "Progression", override.aes = list(lwd=2)),
+             lwd = guide_legend(title = "Heures prévues")) +
+      theme_bw()
+  girafe(print(graph), width_svg = 15, height_svg = 10)
+}
+heures_prevues(salarie)
 ```
 
 
@@ -620,86 +650,90 @@ girafe(print(graph), width_svg = 15, height_svg = 10)
 ### Heures restantes par semaine
 
 ```{r}
-# Tableau des heures restantes divisées par semaine jusqu'à fin tache / sous-tache
-table_restant_semaine <- sarah |> 
-  filter(`Heures restantes` > 0) |> 
-  mutate(today = Sys.Date(),
-         nb_week_left = round(as.numeric(difftime(fin, today, units = "weeks")), 0),
-         hours_week_left = `Heures restantes` / nb_week_left) |> 
-  filter(nb_week_left > 0) |> 
-  select(Projet, todo, `Assigné à`, today, fin, nb_week_left, hours_week_left) |> 
-  group_by(rn = row_number()) %>% 
-  mutate(complete_date = list(seq(as.Date(today), as.Date(fin), by = 7))) |> 
-  unnest()|> ungroup() |> select(-rn) |> 
-  mutate(hours_total = ifelse(row_number() == 1, sum(hours_week_left), NA_real_), .by = complete_date) |> 
-  arrange(complete_date) |> 
-  mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total) |> 
-  mutate(todo = paste0(Projet, "\n", todo))
-
-# Dataviz
-graph <- table_restant_semaine |> 
-  ggplot(aes(x = complete_date, y = hours_week_left, fill = todo, 
-             text = paste0("Todo : ", todo, "\nProjet : ", Projet, "\nTemps : ", round(hours_week_left, 1), 
-                           " heures restantes par semaine \n du ", format(today, '%d %B %Y'), " jusqu'au ", format(fin, '%d %B %Y')))) +
-  geom_bar(stat = "identity") +
-  geom_hline(aes(yintercept = round(32*0.857,0)), col = "red", size = .35) + #round(35*0.857,0) pour un temps plein
-  geom_text(aes(x = complete_date, y = hours_total+2, label = ifelse(hours_total < 1, paste0(round(hours_total, 1), "H"), paste0(round(hours_total, 0), "H"))), 
-            size = 3, vjust = 1) +
-  labs(title = "Répartition des heures restantes par tâches et par semaine",
-       y = "Heures restantes vendues par semaine") +
-  scale_y_continuous(breaks = scales::pretty_breaks()) +
-  scale_x_date(date_breaks = "months" , date_labels = "%b-%y") +
-  scale_fill_viridis_d() +
-  guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
-  theme_classic() +
-  theme(axis.title.x = element_blank())
-ggplotly(graph, tooltip = c("text")) |> 
-    layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+heures_semaine <- function(data){
+  # Tableau des heures restantes divisées par semaine jusqu'à fin tache / sous-tache
+  table_restant_semaine <- data |> 
+    filter(`Heures restantes` > 0) |> 
+    mutate(today = Sys.Date(),
+           nb_week_left = round(as.numeric(difftime(fin, today, units = "weeks")), 0),
+           hours_week_left = `Heures restantes` / nb_week_left) |> 
+    filter(nb_week_left > 0) |> 
+    select(Projet, todo, `Assigné à`, today, fin, nb_week_left, hours_week_left) |> 
+    group_by(rn = row_number()) %>% 
+    mutate(complete_date = list(seq(as.Date(today), as.Date(fin), by = 7))) |> 
+    unnest()|> ungroup() |> select(-rn) |> 
+    mutate(hours_total = ifelse(row_number() == 1, sum(hours_week_left), NA_real_), .by = complete_date) |> 
+    arrange(complete_date) |> 
+    mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total) |> 
+    mutate(todo = paste0(Projet, "\n", todo))
+  
+  # Dataviz
+  graph <- table_restant_semaine |> 
+    ggplot(aes(x = complete_date, y = hours_week_left, fill = todo, 
+               text = paste0("Todo : ", todo, "\nProjet : ", Projet, "\nTemps : ", round(hours_week_left, 1), 
+                             " heures restantes par semaine \n du ", format(today, '%d %B %Y'), " jusqu'au ", format(fin, '%d %B %Y')))) +
+    geom_bar(stat = "identity") +
+    geom_hline(aes(yintercept = round(32*0.857,0)), col = "red", size = .35) + #round(35*0.857,0) pour un temps plein
+    geom_text(aes(x = complete_date, y = hours_total+2, label = ifelse(hours_total < 1, paste0(round(hours_total, 1), "H"), paste0(round(hours_total, 0), "H"))), 
+              size = 3, vjust = 1) +
+    labs(title = "Répartition des heures restantes par tâches et par semaine",
+         y = "Heures restantes vendues par semaine") +
+    scale_y_continuous(breaks = scales::pretty_breaks()) +
+    scale_x_date(date_breaks = "months" , date_labels = "%b-%y") +
+    scale_fill_viridis_d() +
+    guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
+    theme_classic() +
+    theme(axis.title.x = element_blank())
+  ggplotly(graph, tooltip = c("text")) |> 
+      layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+}
+heures_semaine(salarie)
 ```
 
 
 ### Heures restantes par mois
 
 ```{r}
-# Tableau des heures restantes divisées par mois jusqu'à fin tache / sous-tache
-table_restant_mois <- sarah |> 
-  filter(`Heures restantes` > 0) |> 
-  mutate(today = Sys.Date(),
-         nb_month_left = round(as.numeric(difftime(fin, today, units = "weeks") /4.34524), 0),
-         hours_month_left = case_when(nb_month_left >=1 ~ `Heures restantes` / nb_month_left,
-                                      nb_month_left < 1 ~ `Heures restantes`)) |> 
-  filter(nb_month_left > 0) |> 
-  select(Projet, todo, `Assigné à`, today, fin, nb_month_left, hours_month_left) |> 
-  group_by(rn = row_number()) %>% 
-  mutate(complete_date = list(seq(as.Date(today), as.Date(fin), by = "month"))) |> 
-  unnest()|> ungroup() |> select(-rn) |> 
-  mutate(hours_total = ifelse(row_number() == 1, sum(hours_month_left), NA_real_), .by = complete_date) |> 
-  arrange(complete_date) |> 
-  mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total) |> 
-  mutate(todo = paste0(Projet, "\n", todo))
-
-# Dataviz
-graph <- table_restant_mois |> 
-  ggplot(aes(x = complete_date, y = hours_month_left, fill = todo, 
-             text = paste0("Todo : ", todo, "\nProjet : ", Projet, "\nTemps : ", round(hours_month_left, 1), 
-                           " heures restantes par mois \n du ", format(today, '%d %B %Y'), " jusqu'au ", format(fin, '%d %B %Y')))) +
-  geom_bar(stat = "identity") +
-  geom_hline(aes(yintercept = round(17*0.857*8,0)), col = "red", size = .35) + #round(21*0.857*7,0)
-  geom_text(aes(x = complete_date, y = hours_total+2, label = ifelse(hours_total < 1, paste0(round(hours_total, 1), "H"), paste0(round(hours_total, 0), "H"))), 
-            size = 3, vjust = 1) +
-  labs(title = "Répartition des heures restantes par tâches et par mois",
-       y = "Heures restantes vendues par mois") +
-  scale_y_continuous(breaks = scales::pretty_breaks()) +
-  scale_x_date(date_breaks = "months" , date_labels = "%b-%y") +
-  scale_fill_viridis_d() +
-  guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
-  theme_classic() +
-  theme(axis.title.x = element_blank())
-ggplotly(graph, tooltip = c("text")) |> 
-    layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+heures_mois <- function(data){
+  # Tableau des heures restantes divisées par mois jusqu'à fin tache / sous-tache
+  table_restant_mois <- data |> 
+    filter(`Heures restantes` > 0) |> 
+    mutate(today = Sys.Date(),
+           nb_month_left = round(as.numeric(difftime(fin, today, units = "weeks") /4.34524), 0),
+           hours_month_left = case_when(nb_month_left >=1 ~ `Heures restantes` / nb_month_left,
+                                        nb_month_left < 1 ~ `Heures restantes`)) |> 
+    filter(nb_month_left > 0) |> 
+    select(Projet, todo, `Assigné à`, today, fin, nb_month_left, hours_month_left) |> 
+    group_by(rn = row_number()) %>% 
+    mutate(complete_date = list(seq(as.Date(today), as.Date(fin), by = "month"))) |> 
+    unnest()|> ungroup() |> select(-rn) |> 
+    mutate(hours_total = ifelse(row_number() == 1, sum(hours_month_left), NA_real_), .by = complete_date) |> 
+    arrange(complete_date) |> 
+    mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total) |> 
+    mutate(todo = paste0(Projet, "\n", todo))
+  
+  # Dataviz
+  graph <- table_restant_mois |> 
+    ggplot(aes(x = complete_date, y = hours_month_left, fill = todo, 
+               text = paste0("Todo : ", todo, "\nProjet : ", Projet, "\nTemps : ", round(hours_month_left, 1), 
+                             " heures restantes par mois \n du ", format(today, '%d %B %Y'), " jusqu'au ", format(fin, '%d %B %Y')))) +
+    geom_bar(stat = "identity") +
+    geom_hline(aes(yintercept = round(17*0.857*8,0)), col = "red", size = .35) + #round(21*0.857*7,0)
+    geom_text(aes(x = complete_date, y = hours_total+2, label = ifelse(hours_total < 1, paste0(round(hours_total, 1), "H"), paste0(round(hours_total, 0), "H"))), 
+              size = 3, vjust = 1) +
+    labs(title = "Répartition des heures restantes par tâches et par mois",
+         y = "Heures restantes vendues par mois") +
+    scale_y_continuous(breaks = scales::pretty_breaks()) +
+    scale_x_date(date_breaks = "months" , date_labels = "%b-%y") +
+    scale_fill_viridis_d() +
+    guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
+    theme_classic() +
+    theme(axis.title.x = element_blank())
+  ggplotly(graph, tooltip = c("text")) |> 
+      layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+}
+heures_mois(salarie)
 ```
-
-
 
 
 
@@ -707,7 +741,11 @@ Clément.M
 =====================================  
 
 ```{r}
-clem <- data |> filter(`Assigné à` == "Clément Mandron")
+salarie <- data |> filter(`Assigné à` == "Clément Mandron")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
 ```
 
 
@@ -721,52 +759,25 @@ Column {data-width=190}
 ### Box 1
 
 ```{r echo=FALSE}
-# All icons here : https://ionicons.com/v2/cheatsheet.html or https://fontawesome.com/icons?d=gallery&p=2 
-en_cours <- clem |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
-                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
-                            .by = Projet)
-n1 <- en_cours |> distinct(Projet) |> na.omit() |> nrow()
-valueBox(n1, color = "#CC0033", caption = ifelse(n1 > 1, "Missions", "Mission"))
+box1(en_cours)
 ```
 
 ### Box 2
 
 ```{r echo=FALSE}
-n2 <- en_cours |> summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
-n2_factures <- en_cours |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
-valueBox(n2, color = "#FF9933", 
-         caption = ifelse(n2 > 1, paste("Jours prévus dont", n2_factures, "facturés"), paste("Jour prévu dont", n2_factures, "facturé"))) 
+box2(en_cours)
 ```
 
 ### Box 3
 
 ```{r echo=FALSE}
-n3 <- en_cours |> summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
-n3_factures <- en_cours |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  filter_all(all_vars(!grepl("déplacement|deplacement|Déplacement|Deplacement", .))) |> 
-  summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
-valueBox(n3, color = "#FFCC00", 
-         caption = ifelse(n3 > 1, paste("Jours réalisés dont", n3_factures, "facturés"), paste("Jour réalisé dont", n3_factures, "facturé")))
+box3(en_cours)
 ```
 
 ### Box 4
 
 ```{r echo=FALSE}
-n4 <- en_cours |> summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
-n4_factures <- en_cours |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
-valueBox(n4, color = "#339900", 
-         caption = ifelse(n4 > 1, paste("Jours restants dont", n4_factures, "facturés"), paste("Jour restant dont", n4_factures, "facturé")))
+box4(en_cours)
 ```
 
 
@@ -779,55 +790,29 @@ Column {data-width=190}
 
 
 
-### Box 1
+### Box 5
 
 ```{r echo=FALSE}
-annee <- clem |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
-n5 <- annee |> distinct(Projet) |> na.omit() |> nrow()
-valueBox(n5, color = "#CC0033", caption = ifelse(n5 > 1, "Missions", "Mission"))
+box5(annee)
 ```
 
-### Box 2
+### Box 6
 
 ```{r echo=FALSE}
-n6 <- annee |> summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
-n6_factures <- annee |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
-valueBox(n6, color = "#FF9933", 
-         caption = ifelse(n6 > 1, paste("Jours prévus dont", n6_factures, "facturés"), paste("Jour prévu dont", n6_factures, "facturé"))) 
+box6(annee)
 ```
 
-### Box 3
+### Box 7
 
 ```{r echo=FALSE}
-n7 <- annee |> summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
-n7_factures <- annee |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  filter_all(all_vars(!grepl("déplacement|deplacement|Déplacement|Deplacement", .))) |> 
-  summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
-valueBox(n7, color = "#FFCC00", 
-         caption = ifelse(n7 > 1, paste("Jours réalisés dont", n7_factures, "facturés"), paste("Jour réalisé dont", n7_factures, "facturé")))
+box7(annee)
 ```
 
-### Box 4
+### Box 8
 
 ```{r echo=FALSE}
-n8 <- annee |> summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
-n8_factures <- annee |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
-valueBox(n8, color = "#339900", 
-         caption = ifelse(n8 > 1, paste("Jours restants dont", n8_factures, "facturés"), paste("Jour restant dont", n8_factures, "facturé")))
+box8(annee)
 ```
-
-
 
 
 
@@ -839,87 +824,14 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r echo=FALSE, fig.height=2}
-# Tableau des projets
-table_projets <- en_cours |> as.data.frame() |> 
-  mutate(`Heures prévues` = round(`Heures prévues`, 1),
-         `Heures passées` = round(`Heures passées`, 1),
-         `Heures restantes` = round(`Heures restantes`, 1),
-         ` ` = ifelse(type == "Tâche", "clipboard-check", "list-check"),
-         état = case_when(etat == "En cours" ~ "circle", 
-                          etat == "Prêt" ~ "circle-check", 
-                          .default = NA_character_)) |> 
-  arrange(Projet, taches) |> 
-  rename(`heures prévues` = `Heures prévues`,
-         `heures réalisées` = `Heures passées`,
-         `heures restantes` = `Heures restantes`,
-         `assigné` = `Assigné à`) |> 
-  mutate(debut = as.Date(debut, format="%Y-%m-%d %H:%M:%S"),"%d-%m-%Y",
-         fin = as.Date(fin, format="%Y-%m-%d %H:%M:%S"),"%d-%m-%Y") |> 
-  select(Projet, ` `, type, todo, debut, fin, `heures prévues`:`heures restantes`, etape, état, `assigné`, id) |> 
-  mutate_all(as.character) |> 
-  mutate_at(vars(everything()), replace_na, replace = "") |> 
-  mutate(`heures restantes` = as.numeric(`heures restantes`))
-
-# Représentation du tableau
-table_projets |> 
-  group_by(Projet) |> 
-  arrange(id) |> 
-  select(-id) |> 
-  gt(groupname_col = "Projet") |>
-  gt_fa_column(column = ` `, direction = 1, palette = c("clipboard-check" = "black", "list-check" = "#e69f00")) |>  #icones
-  gt_fa_column(column = état, direction = 1, height = '15px', prefer_type = "solid", 
-               palette = if (all(table_projets$état == "circle")) "#999999" 
-               else if (all(table_projets$état == "circle-check")) "green" else c("circle" = "#999999", "circle-check" = "green")) |> 
-  gt_theme_nytimes() |> 
-  tab_header(title = "Tableau global des tâches et sous-tâches en cours") |>
-  tab_style(  #en gras
-    style = list(cell_text(weight = "bold")),
-    locations = cells_body(
-    columns = Projet)) |>
-  tab_style(  #en gras
-    style = list(cell_text(weight = "bold")),
-    locations = cells_body(
-    columns = `heures restantes`)) |>
-  tab_style(  #en gras
-    style = list(cell_text(color = "#f44336")),
-    locations = cells_body(
-    columns = `heures restantes`,
-    rows = `heures restantes` < 0)) |>
-  tab_style(  #en gras
-    style = list(cell_text(color = "#38761d")),
-    locations = cells_body(
-    columns = `heures restantes`,
-    rows = `heures restantes` >= 0)) |>
-  tab_options(table.font.size = 17,
-              table.border.bottom.width = 1,
-              table.border.bottom.color = "#CCCCCC",
-              row_group.background.color = "grey")
+tableau_global(en_cours)
 ```
 
 
 ### Heures prévues
 
 ```{r fig.width=15, fig.height=7}
-graph <- clem |> 
-  filter(!is.na(debut) & etat_projet != "Terminé") |> 
-  mutate(nb_jours = round(as.numeric(difftime(fin, debut, units = "days"))*Progression/100, 0),
-         fin_réalisé = as.POSIXct(as.mondate(debut, timeunits = "days") + nb_jours),
-         todo = fct_reorder(todo, -id)) |> 
-  rename(fin_restant = fin) |> 
-  pivot_longer(cols = c("fin_restant", "fin_réalisé"), names_prefix = "fin_", names_to = "prog", values_to = "fin") |> 
-  ggplot() +
-    geom_segment(aes(x = debut, xend = fin, y = todo, yend = todo, lwd = `Heures prévues`, colour = prog)) +
-    geom_text(aes(x = fin, y = todo, label = ifelse(prog == "restant", paste0("  ", `Heures prévues`, "H"), NA), hjust="bottom"), 
-              size = 3, col = "#333333") +
-    geom_vline(aes(xintercept = as.numeric(as.POSIXct(Sys.Date()))), col = "black", size = .35) +
-    labs(title = "Heures prévues par tâches et sous-tâches des projets", x = "", y = "") +
-    ggforce::facet_col(facets = vars(Projet), scales = "free_y", space = "free") +
-    scale_y_discrete(labels = function(x) stringr::str_wrap(x, width = 70)) +
-    scale_color_manual(values = c("réalisé" = "#51c230", "restant" = "#da4729")) +
-    guides(col = guide_legend(title = "Progression", override.aes = list(lwd=2)),
-           lwd = guide_legend(title = "Heures prévues")) +
-    theme_bw()
-girafe(print(graph), width_svg = 15, height_svg = 10)
+heures_prevues(salarie)
 ```
 
 
@@ -927,85 +839,15 @@ girafe(print(graph), width_svg = 15, height_svg = 10)
 ### Heures restantes par semaine
 
 ```{r}
-# Tableau des heures restantes divisées par semaine jusqu'à fin tache / sous-tache
-table_restant_semaine <- clem |> 
-  filter(`Heures restantes` > 0) |> 
-  mutate(today = Sys.Date(),
-         nb_week_left = round(as.numeric(difftime(fin, today, units = "weeks")), 0),
-         hours_week_left = `Heures restantes` / nb_week_left) |> 
-  filter(nb_week_left > 0) |> 
-  select(Projet, todo, `Assigné à`, today, fin, nb_week_left, hours_week_left) |> 
-  group_by(rn = row_number()) %>% 
-  mutate(complete_date = list(seq(as.Date(today), as.Date(fin), by = 7))) |> 
-  unnest()|> ungroup() |> select(-rn) |> 
-  mutate(hours_total = ifelse(row_number() == 1, sum(hours_week_left), NA_real_), .by = complete_date) |> 
-  arrange(complete_date) |> 
-  mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total) |> 
-  mutate(todo = paste0(Projet, "\n", todo))
-
-# Dataviz
-graph <- table_restant_semaine |> 
-  ggplot(aes(x = complete_date, y = hours_week_left, fill = todo, 
-             text = paste0("Todo : ", todo, "\nProjet : ", Projet, "\nTemps : ", round(hours_week_left, 1), 
-                           " heures restantes par semaine \n du ", format(today, '%d %B %Y'), " jusqu'au ", format(fin, '%d %B %Y')))) +
-  geom_bar(stat = "identity") +
-  geom_hline(aes(yintercept = round(32*0.857,0)), col = "red", size = .35) + #round(35*0.857,0) pour un temps plein
-  geom_text(aes(x = complete_date, y = hours_total+2, label = ifelse(hours_total < 1, paste0(round(hours_total, 1), "H"), paste0(round(hours_total, 0), "H"))), 
-            size = 3, vjust = 1) +
-  labs(title = "Répartition des heures restantes par tâches et par semaine",
-       y = "Heures restantes vendues par semaine") +
-  scale_y_continuous(breaks = scales::pretty_breaks()) +
-  scale_x_date(date_breaks = "months" , date_labels = "%b-%y") +
-  scale_fill_viridis_d() +
-  guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
-  theme_classic() +
-  theme(axis.title.x = element_blank())
-ggplotly(graph, tooltip = c("text")) |> 
-    layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+heures_semaine(salarie)
 ```
 
 
 ### Heures restantes par mois
 
 ```{r}
-# Tableau des heures restantes divisées par mois jusqu'à fin tache / sous-tache
-table_restant_mois <- clem |> 
-  filter(`Heures restantes` > 0) |> 
-  mutate(today = Sys.Date(),
-         nb_month_left = round(as.numeric(difftime(fin, today, units = "weeks") /4.34524), 0),
-         hours_month_left = case_when(nb_month_left >=1 ~ `Heures restantes` / nb_month_left,
-                                      nb_month_left < 1 ~ `Heures restantes`)) |> 
-  filter(nb_month_left > 0) |> 
-  select(Projet, todo, `Assigné à`, today, fin, nb_month_left, hours_month_left) |> 
-  group_by(rn = row_number()) %>% 
-  mutate(complete_date = list(seq(as.Date(today), as.Date(fin), by = "month"))) |> 
-  unnest()|> ungroup() |> select(-rn) |> 
-  mutate(hours_total = ifelse(row_number() == 1, sum(hours_month_left), NA_real_), .by = complete_date) |> 
-  arrange(complete_date) |> 
-  mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total) |> 
-  mutate(todo = paste0(Projet, "\n", todo))
-
-# Dataviz
-graph <- table_restant_mois |> 
-  ggplot(aes(x = complete_date, y = hours_month_left, fill = todo, 
-             text = paste0("Todo : ", todo, "\nProjet : ", Projet, "\nTemps : ", round(hours_month_left, 1), 
-                           " heures restantes par mois \n du ", format(today, '%d %B %Y'), " jusqu'au ", format(fin, '%d %B %Y')))) +
-  geom_bar(stat = "identity") +
-  geom_hline(aes(yintercept = round(17*0.857*8,0)), col = "red", size = .35) + #round(21*0.857*7,0)
-  geom_text(aes(x = complete_date, y = hours_total+2, label = ifelse(hours_total < 1, paste0(round(hours_total, 1), "H"), paste0(round(hours_total, 0), "H"))), 
-            size = 3, vjust = 1) +
-  labs(title = "Répartition des heures restantes par tâches et par mois",
-       y = "Heures restantes vendues par mois") +
-  scale_y_continuous(breaks = scales::pretty_breaks()) +
-  scale_x_date(date_breaks = "months" , date_labels = "%b-%y") +
-  scale_fill_viridis_d() +
-  guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
-  theme_classic() +
-  theme(axis.title.x = element_blank())
-ggplotly(graph, tooltip = c("text")) |> 
-    layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+heures_mois(salarie)
 ```
-
 
 
 
@@ -1015,7 +857,11 @@ Guillaume
 =====================================  
 
 ```{r}
-guillaume <- data |> filter(`Assigné à` == "Guillaume Martin")
+salarie <- data |> filter(`Assigné à` == "Guillaume Martin")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
 ```
 
 
@@ -1029,52 +875,25 @@ Column {data-width=190}
 ### Box 1
 
 ```{r echo=FALSE}
-# All icons here : https://ionicons.com/v2/cheatsheet.html or https://fontawesome.com/icons?d=gallery&p=2 
-en_cours <- guillaume |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
-                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
-                            .by = Projet)
-n1 <- en_cours |> distinct(Projet) |> na.omit() |> nrow()
-valueBox(n1, color = "#CC0033", caption = ifelse(n1 > 1, "Missions", "Mission"))
+box1(en_cours)
 ```
 
 ### Box 2
 
 ```{r echo=FALSE}
-n2 <- en_cours |> summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
-n2_factures <- en_cours |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
-valueBox(n2, color = "#FF9933", 
-         caption = ifelse(n2 > 1, paste("Jours prévus dont", n2_factures, "facturés"), paste("Jour prévu dont", n2_factures, "facturé"))) 
+box2(en_cours)
 ```
 
 ### Box 3
 
 ```{r echo=FALSE}
-n3 <- en_cours |> summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
-n3_factures <- en_cours |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  filter_all(all_vars(!grepl("déplacement|deplacement|Déplacement|Deplacement", .))) |> 
-  summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
-valueBox(n3, color = "#FFCC00", 
-         caption = ifelse(n3 > 1, paste("Jours réalisés dont", n3_factures, "facturés"), paste("Jour réalisé dont", n3_factures, "facturé")))
+box3(en_cours)
 ```
 
 ### Box 4
 
 ```{r echo=FALSE}
-n4 <- en_cours |> summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
-n4_factures <- en_cours |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
-valueBox(n4, color = "#339900", 
-         caption = ifelse(n4 > 1, paste("Jours restants dont", n4_factures, "facturés"), paste("Jour restant dont", n4_factures, "facturé")))
+box4(en_cours)
 ```
 
 
@@ -1087,55 +906,29 @@ Column {data-width=190}
 
 
 
-### Box 1
+### Box 5
 
 ```{r echo=FALSE}
-annee <- guillaume |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
-n5 <- annee |> distinct(Projet) |> na.omit() |> nrow()
-valueBox(n5, color = "#CC0033", caption = ifelse(n5 > 1, "Missions", "Mission"))
+box5(annee)
 ```
 
-### Box 2
+### Box 6
 
 ```{r echo=FALSE}
-n6 <- annee |> summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
-n6_factures <- annee |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
-valueBox(n6, color = "#FF9933", 
-         caption = ifelse(n6 > 1, paste("Jours prévus dont", n6_factures, "facturés"), paste("Jour prévu dont", n6_factures, "facturé"))) 
+box6(annee)
 ```
 
-### Box 3
+### Box 7
 
 ```{r echo=FALSE}
-n7 <- annee |> summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
-n7_factures <- annee |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  filter_all(all_vars(!grepl("déplacement|deplacement|Déplacement|Deplacement", .))) |> 
-  summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
-valueBox(n7, color = "#FFCC00", 
-         caption = ifelse(n7 > 1, paste("Jours réalisés dont", n7_factures, "facturés"), paste("Jour réalisé dont", n7_factures, "facturé")))
+box7(annee)
 ```
 
-### Box 4
+### Box 8
 
 ```{r echo=FALSE}
-n8 <- annee |> summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
-n8_factures <- annee |> 
-  filter(Projet != "Tâches non facturables à timesheeter",
-         label != "Heures supplémentaires" | is.na(label),
-         Facturable == TRUE) |> 
-  summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
-valueBox(n8, color = "#339900", 
-         caption = ifelse(n8 > 1, paste("Jours restants dont", n8_factures, "facturés"), paste("Jour restant dont", n8_factures, "facturé")))
+box8(annee)
 ```
-
-
 
 
 
@@ -1147,87 +940,14 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r echo=FALSE, fig.height=2}
-# Tableau des projets
-table_projets <- en_cours |> as.data.frame() |> 
-  mutate(`Heures prévues` = round(`Heures prévues`, 1),
-         `Heures passées` = round(`Heures passées`, 1),
-         `Heures restantes` = round(`Heures restantes`, 1),
-         ` ` = ifelse(type == "Tâche", "clipboard-check", "list-check"),
-         état = case_when(etat == "En cours" ~ "circle", 
-                          etat == "Prêt" ~ "circle-check", 
-                          .default = NA_character_)) |> 
-  arrange(Projet, taches) |> 
-  rename(`heures prévues` = `Heures prévues`,
-         `heures réalisées` = `Heures passées`,
-         `heures restantes` = `Heures restantes`,
-         `assigné` = `Assigné à`) |> 
-  mutate(debut = as.Date(debut, format="%Y-%m-%d %H:%M:%S"),"%d-%m-%Y",
-         fin = as.Date(fin, format="%Y-%m-%d %H:%M:%S"),"%d-%m-%Y") |> 
-  select(Projet, ` `, type, todo, debut, fin, `heures prévues`:`heures restantes`, etape, état, `assigné`, id) |> 
-  mutate_all(as.character) |> 
-  mutate_at(vars(everything()), replace_na, replace = "") |> 
-  mutate(`heures restantes` = as.numeric(`heures restantes`))
-
-# Représentation du tableau
-table_projets |> 
-  group_by(Projet) |> 
-  arrange(id) |> 
-  select(-id) |> 
-  gt(groupname_col = "Projet") |>
-  gt_fa_column(column = ` `, direction = 1, palette = c("clipboard-check" = "black", "list-check" = "#e69f00")) |>  #icones
-  gt_fa_column(column = état, direction = 1, height = '15px', prefer_type = "solid", 
-               palette = if (all(table_projets$état == "circle")) "#999999" 
-               else if (all(table_projets$état == "circle-check")) "green" else c("circle" = "#999999", "circle-check" = "green")) |> 
-  gt_theme_nytimes() |> 
-  tab_header(title = "Tableau global des tâches et sous-tâches en cours") |>
-  tab_style(  #en gras
-    style = list(cell_text(weight = "bold")),
-    locations = cells_body(
-    columns = Projet)) |>
-  tab_style(  #en gras
-    style = list(cell_text(weight = "bold")),
-    locations = cells_body(
-    columns = `heures restantes`)) |>
-  tab_style(  #en gras
-    style = list(cell_text(color = "#f44336")),
-    locations = cells_body(
-    columns = `heures restantes`,
-    rows = `heures restantes` < 0)) |>
-  tab_style(  #en gras
-    style = list(cell_text(color = "#38761d")),
-    locations = cells_body(
-    columns = `heures restantes`,
-    rows = `heures restantes` >= 0)) |>
-  tab_options(table.font.size = 17,
-              table.border.bottom.width = 1,
-              table.border.bottom.color = "#CCCCCC",
-              row_group.background.color = "grey")
+tableau_global(en_cours)
 ```
 
 
 ### Heures prévues
 
 ```{r fig.width=15, fig.height=7}
-graph <- guillaume |> 
-  filter(!is.na(debut) & etat_projet != "Terminé") |> 
-  mutate(nb_jours = round(as.numeric(difftime(fin, debut, units = "days"))*Progression/100, 0),
-         fin_réalisé = as.POSIXct(as.mondate(debut, timeunits = "days") + nb_jours),
-         todo = fct_reorder(todo, -id)) |> 
-  rename(fin_restant = fin) |> 
-  pivot_longer(cols = c("fin_restant", "fin_réalisé"), names_prefix = "fin_", names_to = "prog", values_to = "fin") |> 
-  ggplot() +
-    geom_segment(aes(x = debut, xend = fin, y = todo, yend = todo, lwd = `Heures prévues`, colour = prog)) +
-    geom_text(aes(x = fin, y = todo, label = ifelse(prog == "restant", paste0("  ", `Heures prévues`, "H"), NA), hjust="bottom"), 
-              size = 3, col = "#333333") +
-    geom_vline(aes(xintercept = as.numeric(as.POSIXct(Sys.Date()))), col = "black", size = .35) +
-    labs(title = "Heures prévues par tâches et sous-tâches des projets", x = "", y = "") +
-    ggforce::facet_col(facets = vars(Projet), scales = "free_y", space = "free") +
-    scale_y_discrete(labels = function(x) stringr::str_wrap(x, width = 70)) +
-    scale_color_manual(values = c("réalisé" = "#51c230", "restant" = "#da4729")) +
-    guides(col = guide_legend(title = "Progression", override.aes = list(lwd=2)),
-           lwd = guide_legend(title = "Heures prévues")) +
-    theme_bw()
-girafe(print(graph), width_svg = 15, height_svg = 10)
+heures_prevues(salarie)
 ```
 
 
@@ -1235,82 +955,14 @@ girafe(print(graph), width_svg = 15, height_svg = 10)
 ### Heures restantes par semaine
 
 ```{r}
-# Tableau des heures restantes divisées par semaine jusqu'à fin tache / sous-tache
-table_restant_semaine <- guillaume |> 
-  filter(`Heures restantes` > 0) |> 
-  mutate(today = Sys.Date(),
-         nb_week_left = round(as.numeric(difftime(fin, today, units = "weeks")), 0),
-         hours_week_left = `Heures restantes` / nb_week_left) |> 
-  filter(nb_week_left > 0) |> 
-  select(Projet, todo, `Assigné à`, today, fin, nb_week_left, hours_week_left) |> 
-  group_by(rn = row_number()) %>% 
-  mutate(complete_date = list(seq(as.Date(today), as.Date(fin), by = 7))) |> 
-  unnest()|> ungroup() |> select(-rn) |> 
-  mutate(hours_total = ifelse(row_number() == 1, sum(hours_week_left), NA_real_), .by = complete_date) |> 
-  arrange(complete_date) |> 
-  mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total) |> 
-  mutate(todo = paste0(Projet, "\n", todo))
-
-# Dataviz
-graph <- table_restant_semaine |> 
-  ggplot(aes(x = complete_date, y = hours_week_left, fill = todo, 
-             text = paste0("Todo : ", todo, "\nProjet : ", Projet, "\nTemps : ", round(hours_week_left, 1), 
-                           " heures restantes par semaine \n du ", format(today, '%d %B %Y'), " jusqu'au ", format(fin, '%d %B %Y')))) +
-  geom_bar(stat = "identity") +
-  geom_hline(aes(yintercept = round(32*0.857,0)), col = "red", size = .35) + #round(35*0.857,0) pour un temps plein
-  geom_text(aes(x = complete_date, y = hours_total+2, label = ifelse(hours_total < 1, paste0(round(hours_total, 1), "H"), paste0(round(hours_total, 0), "H"))), 
-            size = 3, vjust = 1) +
-  labs(title = "Répartition des heures restantes par tâches et par semaine",
-       y = "Heures restantes vendues par semaine") +
-  scale_y_continuous(breaks = scales::pretty_breaks()) +
-  scale_x_date(date_breaks = "months" , date_labels = "%b-%y") +
-  scale_fill_viridis_d() +
-  guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
-  theme_classic() +
-  theme(axis.title.x = element_blank())
-ggplotly(graph, tooltip = c("text")) |> 
-    layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+heures_semaine(salarie)
 ```
 
 
 ### Heures restantes par mois
 
 ```{r}
-# Tableau des heures restantes divisées par mois jusqu'à fin tache / sous-tache
-table_restant_mois <- guillaume |> 
-  filter(`Heures restantes` > 0) |> 
-  mutate(today = Sys.Date(),
-         nb_month_left = round(as.numeric(difftime(fin, today, units = "weeks") /4.34524), 0),
-         hours_month_left = case_when(nb_month_left >=1 ~ `Heures restantes` / nb_month_left,
-                                      nb_month_left < 1 ~ `Heures restantes`)) |> 
-  filter(nb_month_left > 0) |> 
-  select(Projet, todo, `Assigné à`, today, fin, nb_month_left, hours_month_left) |> 
-  group_by(rn = row_number()) %>% 
-  mutate(complete_date = list(seq(as.Date(today), as.Date(fin), by = "month"))) |> 
-  unnest()|> ungroup() |> select(-rn) |> 
-  mutate(hours_total = ifelse(row_number() == 1, sum(hours_month_left), NA_real_), .by = complete_date) |> 
-  arrange(complete_date) |> 
-  mutate(hours_total = ifelse(row_number() == 1, hours_total, NA_real_), .by = hours_total) |> 
-  mutate(todo = paste0(Projet, "\n", todo))
-
-# Dataviz
-graph <- table_restant_mois |> 
-  ggplot(aes(x = complete_date, y = hours_month_left, fill = todo, 
-             text = paste0("Todo : ", todo, "\nProjet : ", Projet, "\nTemps : ", round(hours_month_left, 1), 
-                           " heures restantes par mois \n du ", format(today, '%d %B %Y'), " jusqu'au ", format(fin, '%d %B %Y')))) +
-  geom_bar(stat = "identity") +
-  geom_hline(aes(yintercept = round(17*0.857*8,0)), col = "red", size = .35) + #round(21*0.857*7,0)
-  geom_text(aes(x = complete_date, y = hours_total+2, label = ifelse(hours_total < 1, paste0(round(hours_total, 1), "H"), paste0(round(hours_total, 0), "H"))), 
-            size = 3, vjust = 1) +
-  labs(title = "Répartition des heures restantes par tâches et par mois",
-       y = "Heures restantes vendues par mois") +
-  scale_y_continuous(breaks = scales::pretty_breaks()) +
-  scale_x_date(date_breaks = "months" , date_labels = "%b-%y") +
-  scale_fill_viridis_d() +
-  guides(fill = guide_legend(title = "Tâches et sous-tâches")) +
-  theme_classic() +
-  theme(axis.title.x = element_blank())
-ggplotly(graph, tooltip = c("text")) |> 
-    layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
+heures_mois(salarie)
 ```
+
 
