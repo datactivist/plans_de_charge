@@ -107,7 +107,8 @@ data <- read_csv("project.task.csv") |>
          todo = Titre,
          `Heures prévues` = `Heures prévues initialement`) |> 
   mutate(type = case_when(!is.na(tache_parente) ~ "Sous-tâche", .default = "Tâche"),
-         taches = coalesce(tache_parente, paste0(todo, 1))) |> 
+         taches = coalesce(tache_parente, paste0(todo, 1)),
+         `Heures restantes` = `Heures prévues` - `Heures passées`) |> 
   select(Projet, debut_projet, fin_projet, todo, type, tache_parente, taches, Description, Progression, debut, fin, etape, etat, label, `Heures passées`:`Heures restantes`, `Assigné à`, Facturable) |> 
   arrange(Projet, taches) |> 
   group_by(Projet) |> 
