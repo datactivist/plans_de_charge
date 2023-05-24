@@ -332,5 +332,22 @@ ggplotly(graph, tooltip = c("text"))
 
 
 
-# Visualisation n°4
-data(df_konj)
+
+
+
+#--------------------------------------------------------------------------------------------------------
+# Parse data Odoo
+#--------------------------------------------------------------------------------------------------------
+
+
+library(htm2txt)
+data <- as.data.frame(gettxt('https://odoo.datactivist.coop/web#action=154&model=project.task&view_type=list&cids=1&menu_id=111'))
+
+
+
+
+
+
+
+
+

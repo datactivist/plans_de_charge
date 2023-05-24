@@ -6,6 +6,8 @@ output:
     vertical_layout: fill
     #logo: logo_datactivist.png
     storyboard: true
+    includes:
+      in_header: header.html
             
 knit: (
   function(inputFile, encoding) { 
