@@ -113,7 +113,8 @@ data <- read_csv("project.task.csv") |>
          taches = coalesce(tache_parente, paste0(todo, 1)),
          `Heures restantes` = `Heures prévues` - `Heures passées`, 
          Progression = `Heures passées` / `Heures prévues` *100,
-         Progression = as.numeric(str_replace_all(Progression, c("Inf" = "0", "NaN" = "0")))) |> 
+         Progression = as.numeric(str_replace_all(Progression, c("Inf" = "0", "NaN" = "0"))),
+         Progression = replace(Progression, which(Progression > 100), 100)) |> 
   select(Projet, debut_projet, fin_projet, etat_projet, todo, type, tache_parente, taches, Description, Progression, debut, fin, etape, etat, label, `Heures passées`:`Heures restantes`, `Assigné à`, Facturable) |> 
   arrange(Projet, taches) |> 
   group_by(Projet) |> 
