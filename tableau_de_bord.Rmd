@@ -561,6 +561,7 @@ Column {data-width=1200}{.tabset}
 tableau_global <- function(data){
   # Tableau des projets
   table_projets <- data |> as.data.frame() |> 
+    filter(debut <= Sys.Date() & fin >= Sys.Date()) |> 
     mutate(`Heures prévues` = round(`Heures prévues`, 1),
            `Heures passées` = round(`Heures passées`, 1),
            `Heures restantes` = round(`Heures restantes`, 1),
@@ -573,8 +574,8 @@ tableau_global <- function(data){
            `heures réalisées` = `Heures passées`,
            `heures restantes` = `Heures restantes`,
            `assigné` = `Assigné à`) |> 
-    mutate(debut = as.Date(debut, format="%Y-%m-%d %H:%M:%S"),"%d-%m-%Y",
-           fin = as.Date(fin, format="%Y-%m-%d %H:%M:%S"),"%d-%m-%Y") |> 
+    mutate(debut = format(as.POSIXct(debut, format="%Y-%d-%m %H:%M:%S"),"%d %b %Y"),
+           fin = format(as.POSIXct(fin, format="%Y-%d-%m %H:%M:%S"),"%d %b %Y")) |> 
     select(Projet, ` `, type, todo, debut, fin, `heures prévues`:`heures restantes`, etape, état, `assigné`, id) |> 
     mutate_all(as.character) |> 
     mutate_at(vars(everything()), replace_na, replace = "") |> 
@@ -586,7 +587,9 @@ tableau_global <- function(data){
     arrange(id) |> 
     select(-id) |> 
     gt(groupname_col = "Projet") |>
-    gt_fa_column(column = ` `, direction = 1, palette = c("clipboard-check" = "black", "list-check" = "#e69f00")) |>  #icones
+    gt_fa_column(column = ` `, direction = 1, 
+                 palette = if (all(table_projets$` ` == "clipboard-check")) "black" 
+                 else if (all(table_projets$` ` == "list-check")) "#e69f00" else c("circle" = "black", "list-check" = "#e69f00")) |>
     gt_fa_column(column = état, direction = 1, height = '15px', prefer_type = "solid", 
                  palette = if (all(table_projets$état == "circle")) "#999999" 
                  else if (all(table_projets$état == "circle-check")) "green" else c("circle" = "#999999", "circle-check" = "green")) |> 
@@ -601,21 +604,29 @@ tableau_global <- function(data){
       locations = cells_body(
       columns = `heures restantes`)) |>
     tab_style(  #en gras
-      style = list(cell_text(color = "#f44336")),
+      style = list(cell_text(color = "#f44336", align = "center")),
       locations = cells_body(
       columns = `heures restantes`,
       rows = `heures restantes` < 0)) |>
     tab_style(  #en gras
-      style = list(cell_text(color = "#38761d")),
+      style = list(cell_text(color = "#38761d", align = "center")),
       locations = cells_body(
       columns = `heures restantes`,
       rows = `heures restantes` >= 0)) |>
+    tab_style(  #en gras
+      style = list(cell_text(align = "center")),
+      locations = cells_body(
+      columns = `heures prévues`)) |>
+    tab_style(  #en gras
+      style = list(cell_text(weight = "lighter")),
+      locations = cells_body(
+      columns = `assigné`)) |>
     tab_options(table.font.size = 17,
                 table.border.bottom.width = 1,
                 table.border.bottom.color = "#CCCCCC",
                 row_group.background.color = "grey")
 }
-tableau_global(en_cours)
+tableau_global(salarie)
 ```
 
 
@@ -826,7 +837,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r echo=FALSE, fig.height=2}
-tableau_global(en_cours)
+tableau_global(salarie)
 ```
 
 
@@ -942,7 +953,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r echo=FALSE, fig.height=2}
-tableau_global(en_cours)
+tableau_global(salarie)
 ```
 
 
