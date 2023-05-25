@@ -111,7 +111,9 @@ data <- read_csv("project.task.csv") |>
          etat_projet = `Projet/État du Projet`) |> 
   mutate(type = case_when(!is.na(tache_parente) ~ "Sous-tâche", .default = "Tâche"),
          taches = coalesce(tache_parente, paste0(todo, 1)),
-         `Heures restantes` = `Heures prévues` - `Heures passées`) |> 
+         `Heures restantes` = `Heures prévues` - `Heures passées`, 
+         Progression = `Heures passées` / `Heures prévues` *100,
+         Progression = as.numeric(str_replace_all(Progression, c("Inf" = "0", "NaN" = "0")))) |> 
   select(Projet, debut_projet, fin_projet, etat_projet, todo, type, tache_parente, taches, Description, Progression, debut, fin, etape, etat, label, `Heures passées`:`Heures restantes`, `Assigné à`, Facturable) |> 
   arrange(Projet, taches) |> 
   group_by(Projet) |> 
@@ -557,8 +559,16 @@ Column {data-width=1200}{.tabset}
 ### Tableau global
 
     
-```{r echo=FALSE, fig.height=2}
+```{r}
 tableau_global <- function(data){
+  # Barplot dans gt table
+  bar_chart <- function(label, height = "16px", fill = "green", background = "white") {
+    bar <- glue::glue("<div style='background:{fill};width:{label}%;height:{height};'></div>")
+    chart <- glue::glue("<div style='flex-grow:1;margin-left:8px;background:{background};'>{bar}</div>")
+    glue::glue("<div style='display:flex;align-items:left';>{chart}</div>") %>%
+    gt::html()
+  }
+  
   # Tableau des projets
   table_projets <- data |> as.data.frame() |> 
     filter(debut <= Sys.Date() & fin >= Sys.Date()) |> 
@@ -576,10 +586,11 @@ tableau_global <- function(data){
            `assigné` = `Assigné à`) |> 
     mutate(debut = format(as.POSIXct(debut, format="%Y-%d-%m %H:%M:%S"),"%d %b %Y"),
            fin = format(as.POSIXct(fin, format="%Y-%d-%m %H:%M:%S"),"%d %b %Y")) |> 
-    select(Projet, ` `, type, todo, debut, fin, `heures prévues`:`heures restantes`, etape, état, `assigné`, id) |> 
+    select(Projet, ` `, type, todo, debut, fin, `heures prévues`:`heures restantes`, etape, Progression, état, `assigné`, id) |> 
     mutate_all(as.character) |> 
     mutate_at(vars(everything()), replace_na, replace = "") |> 
-    mutate(`heures restantes` = as.numeric(`heures restantes`))
+    mutate(`heures restantes` = as.numeric(`heures restantes`),
+           Progression = purrr::map(Progression, ~bar_chart(label = .x, fill = "#51c230", background = "#da4729")))
   
   # Représentation du tableau
   table_projets |> 
@@ -621,6 +632,11 @@ tableau_global <- function(data){
       style = list(cell_text(weight = "lighter")),
       locations = cells_body(
       columns = `assigné`)) |>
+    tab_style(  #en gras
+      style = list(cell_text(align = "center")),
+      locations = cells_body(
+      columns = état)) |> 
+    cols_align(align = "left", columns = c(Progression)) |>
     tab_options(table.font.size = 17,
                 table.border.bottom.width = 1,
                 table.border.bottom.color = "#CCCCCC",
@@ -836,7 +852,7 @@ Column {data-width=1200}{.tabset}
 ### Tableau global
 
     
-```{r echo=FALSE, fig.height=2}
+```{r}
 tableau_global(salarie)
 ```
 
@@ -952,7 +968,7 @@ Column {data-width=1200}{.tabset}
 ### Tableau global
 
     
-```{r echo=FALSE, fig.height=2}
+```{r}
 tableau_global(salarie)
 ```
 
