@@ -401,11 +401,13 @@ ggplotly(graph, tooltip = c("text"))
 ```
 
 
-Sarah
+
+
+Allyson
 =====================================  
 
 ```{r}
-salarie <- data |> filter(`Assigné à` == "Sarah Bourgouin")
+salarie <- data |> filter(`Assigné à` == "Allyson Pallisser")
 annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
 en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
                             (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
@@ -579,7 +581,7 @@ tableau_global <- function(data){
            ` ` = ifelse(type == "Tâche", "clipboard-check", "list-check"),
            état = case_when(etat == "En cours" ~ "circle", 
                             etat == "Prêt" ~ "circle-check", 
-                            .default = NA_character_)) |> 
+                            .default = "circle")) |> 
     arrange(Projet, taches) |> 
     rename(`heures prévues` = `Heures prévues`,
            `heures réalisées` = `Heures passées`,
@@ -672,7 +674,7 @@ heures_prevues <- function(data){
       theme_bw()
   girafe(print(graph), width_svg = 15, height_svg = 10)
 }
-heures_prevues(salarie)
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
 ```
 
 
@@ -717,7 +719,7 @@ heures_semaine <- function(data){
   ggplotly(graph, tooltip = c("text")) |> 
       layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
 }
-heures_semaine(salarie)
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
 ```
 
 
@@ -762,7 +764,591 @@ heures_mois <- function(data){
   ggplotly(graph, tooltip = c("text")) |> 
       layout(xaxis = list(autorange = TRUE), yaxis = list(autorange = TRUE))
 }
-heures_mois(salarie)
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+
+
+
+Anne-Laure
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Anne-Laure Donzel")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+
+
+
+
+Anthony 
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Anthony Gigerich")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+Arthur
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Arthur Sarazin")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+
+Candice
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Candice Fillaud")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+
+Clément.F
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Clément Feyt")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
 ```
 
 
@@ -861,7 +1447,7 @@ tableau_global(salarie)
 ### Heures prévues
 
 ```{r fig.width=15, fig.height=7}
-heures_prevues(salarie)
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
 ```
 
 
@@ -869,15 +1455,708 @@ heures_prevues(salarie)
 ### Heures restantes par semaine
 
 ```{r}
-heures_semaine(salarie)
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
 ```
 
 
 ### Heures restantes par mois
 
 ```{r}
-heures_mois(salarie)
+tryCatch(heures_mois(salarie), error = function(e) NULL)
 ```
+
+
+
+Diane
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Diane Thierry")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+Élise
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Ho-Pun-Cheung Élise")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+Emeline
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Emeline Vandeven")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+
+
+
+Etienne.F
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Etienne Ferrandi")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+Etienne.P
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Etienne Pichot Damon")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+
+
+François
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "François Lacombe")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
 
 
 
@@ -977,7 +2256,7 @@ tableau_global(salarie)
 ### Heures prévues
 
 ```{r fig.width=15, fig.height=7}
-heures_prevues(salarie)
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
 ```
 
 
@@ -985,14 +2264,955 @@ heures_prevues(salarie)
 ### Heures restantes par semaine
 
 ```{r}
-heures_semaine(salarie)
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
 ```
 
 
 ### Heures restantes par mois
 
 ```{r}
-heures_mois(salarie)
+tryCatch(heures_mois(salarie), error = function(e) NULL)
 ```
+
+
+
+
+
+
+
+Joël
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Joël Gombin")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+
+
+
+Magalie
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Magalie Dartus")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+
+
+
+Mathieu
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Mathieu Morey")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+
+
+
+Maëlle
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Maëlle Fouquenet")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+
+
+
+Pauline
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Pauline Breton-Chauvet")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+
+
+
+Samuel
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Samuel Goëta")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+Sarah
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Sarah Bourgouin")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
+
+
+
+
+
+
+Stéphanie
+=====================================  
+
+```{r}
+salarie <- data |> filter(`Assigné à` == "Stéphanie Trichard")
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
+                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
+                            .by = Projet)
+```
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en cours** :
+
+
+### Box 1
+
+```{r echo=FALSE}
+box1(en_cours)
+```
+
+### Box 2
+
+```{r echo=FALSE}
+box2(en_cours)
+```
+
+### Box 3
+
+```{r echo=FALSE}
+box3(en_cours)
+```
+
+### Box 4
+
+```{r echo=FALSE}
+box4(en_cours)
+```
+
+
+
+
+Column {data-width=190}
+-----------------------------------------------------------------------
+
+**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
+
+
+
+### Box 5
+
+```{r echo=FALSE}
+box5(annee)
+```
+
+### Box 6
+
+```{r echo=FALSE}
+box6(annee)
+```
+
+### Box 7
+
+```{r echo=FALSE}
+box7(annee)
+```
+
+### Box 8
+
+```{r echo=FALSE}
+box8(annee)
+```
+
+
+
+Column {data-width=1200}{.tabset}
+-----------------------------------------------------------------------
+
+
+### Tableau global
+
+    
+```{r}
+tableau_global(salarie)
+```
+
+
+### Heures prévues
+
+```{r fig.width=15, fig.height=7}
+tryCatch(heures_prevues(salarie), error = function(e) NULL)
+```
+
+
+
+### Heures restantes par semaine
+
+```{r}
+tryCatch(heures_semaine(salarie), error = function(e) NULL)
+```
+
+
+### Heures restantes par mois
+
+```{r}
+tryCatch(heures_mois(salarie), error = function(e) NULL)
+```
+
 
 
