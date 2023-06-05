@@ -4,7 +4,7 @@ output:
   flexdashboard::flex_dashboard:
     theme: readable
     vertical_layout: fill
-    #logo: logo_datactivist.png
+    logo: logo_datactivist.png
     storyboard: true
     includes:
       in_header: header.html
@@ -125,7 +125,7 @@ data <- read_csv("project.task.csv") |>
 ```
 
 
-Datactivist
+Vue d'ensemble {data-icon="fa-search"}
 =====================================  
 
 
@@ -402,8 +402,12 @@ ggplotly(graph, tooltip = c("text"))
 
 
 
+Par projet {data-icon="fa-list-check"}
+=====================================  
 
-Allyson
+
+
+Allyson {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -773,7 +777,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Anne-Laure
+Anne-Laure {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -892,7 +896,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Anthony 
+Anthony {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -1007,7 +1011,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Arthur
+Arthur {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -1123,7 +1127,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Candice
+Candice {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -1239,7 +1243,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Clément.F
+Clément.F {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -1353,7 +1357,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Clément.M
+Clément.M {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -1467,7 +1471,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Diane
+Diane {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -1581,7 +1585,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Élise
+Élise {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -1695,7 +1699,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Emeline
+Emeline {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -1813,7 +1817,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Etienne.F
+Etienne.F {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -1927,7 +1931,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Etienne.P
+Etienne.P {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -2044,7 +2048,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-François
+François {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -2162,7 +2166,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Guillaume
+Guillaume {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -2280,7 +2284,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Joël
+Joël {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -2398,7 +2402,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Magalie
+Magalie {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -2516,7 +2520,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Mathieu
+Mathieu {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -2634,7 +2638,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Maëlle
+Maëlle {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -2752,7 +2756,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Pauline
+Pauline {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -2870,7 +2874,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Samuel
+Samuel {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -2985,7 +2989,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Sarah
+Sarah {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
@@ -3102,7 +3106,7 @@ tryCatch(heures_mois(salarie), error = function(e) NULL)
 
 
 
-Stéphanie
+Stéphanie {data-navmenu="Par salarié"}
 =====================================  
 
 ```{r}
