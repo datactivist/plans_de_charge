@@ -1,2 +1,2 @@
 # plans_de_charge
-Visualisation des plans de charge 
+Visualisation des plans de charge.
