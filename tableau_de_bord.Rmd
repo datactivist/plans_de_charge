@@ -97,9 +97,11 @@ package.check <- lapply(
   }
 )
 # Données
-data <- read_csv("project.task.csv") |> 
-  rename(debut_projet = `Projet/Date de début`,
-         fin_projet = `Projet/Date de fin de validité`,
+#old_data <- read_csv("project.task.csv")
+data <- read_csv("https://test.datactivist.coop/datactivist_report/static/src/Taches_-_Export_pour_dataviz.csv") |> 
+  rename(Projet = `Projet...1`,
+         debut_projet = `Projet...2`,
+         fin_projet = `Projet...3`,
          debut = `Date de début`,
          fin = `Date de fin`,
          tache_parente = `Tâche parente`,
@@ -108,7 +110,7 @@ data <- read_csv("project.task.csv") |>
          etape = `Étape`,
          todo = Titre,
          `Heures prévues` = `Heures prévues initialement`,
-         etat_projet = `Projet/État du Projet`) |> 
+         etat_projet = `Projet...18`) |> 
   mutate(type = case_when(!is.na(tache_parente) ~ "Sous-tâche", .default = "Tâche"),
          taches = coalesce(tache_parente, paste0(todo, 1)),
          `Heures restantes` = `Heures prévues` - `Heures passées`, 
