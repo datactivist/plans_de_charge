@@ -8,6 +8,9 @@ output:
     storyboard: true
     includes:
       in_header: header.html
+  fidelius::html_password_protected:
+    #password: "pw"
+    preview: true
             
 knit: (
   function(inputFile, encoding) { 
@@ -75,6 +78,7 @@ overflow: auto;
 ```{r setup, include=FALSE}
 library(flexdashboard)
 knitr::opts_chunk$set(echo = FALSE, 
+                      dpi = 50,
                       eval = TRUE, 
                       message = FALSE, 
                       warning = FALSE,
@@ -98,7 +102,7 @@ package.check <- lapply(
 )
 # Données
 #old_data <- read_csv("project.task.csv")
-data <- read_csv("https://test.datactivist.coop/datactivist_report/static/src/Taches_-_Export_pour_dataviz.csv") |> 
+data <- read_csv("https://odoo.datactivist.coop/datactivist_report/static/src/Taches_-_Export_pour_dataviz.csv") |> 
   rename(Projet = `Projet...1`,
          debut_projet = `Projet...2`,
          fin_projet = `Projet...3`,
@@ -123,7 +127,8 @@ data <- read_csv("https://test.datactivist.coop/datactivist_report/static/src/Ta
   arrange(desc(taches)) |> 
   mutate(id = row_number()) |> 
   mutate(todo = fct_reorder(todo, -id)) |> 
-  ungroup()
+  ungroup() |> 
+  filter(`Assigné à` %in% c("Allyson Pallisser","Anne-Laure Donzel","Anthony Gigerich","Arthur Sarazin","Candice Fillaud","Clément Feyt","Clément Mandron","Diane Thierry","Emeline Vandeven","Etienne Ferrandi","Etienne Pichot Damon","François Lacombe","Guillaume Martin","Ho-Pun-Cheung Élise","Joël Gombin","Maëlle Fouquenet","Magalie Dartus","Pauline Breton-Chauvet","Samuel Goeta","Sarah Bourgouin","Stéphanie Trichard"))
 ```
 
 
@@ -260,7 +265,7 @@ Column {data-width=1200}{.tabset}
 
 ```{r include=FALSE}
   # preparation des données
-data_wordcloud <- glimpse(data)
+data_wordcloud <- glimpse(annee)
 corpus = Corpus(VectorSource(data_wordcloud$Projet))
   # mise en forme des mots
 corpus = tm_map(corpus, PlainTextDocument) #Conversion to Lowercase
@@ -295,7 +300,7 @@ word_data |>
 
 ```{r include=FALSE}
   # preparation des données
-data_wordcloud <- glimpse(data)
+data_wordcloud <- glimpse(annee)
 corpus = Corpus(VectorSource(data_wordcloud$todo))
   # mise en forme des mots
 corpus = tm_map(corpus, PlainTextDocument) #Conversion to Lowercase
@@ -374,7 +379,6 @@ girafe(print(graph), width_svg = 15, height_svg = 8)
 ```{r}
 # Tableau des heures restantes divisées par mois jusqu'à fin tache / sous-tache
 table <- en_cours |> 
-  filter(`Assigné à` != "Cyril Morin") |> 
   mutate(sum_h_restantes = sum(`Heures restantes`), .by = c(`Assigné à`, Projet)) |> 
   distinct(`Assigné à`, Projet, debut_projet, fin_projet, sum_h_restantes) |> 
   mutate(nb_projets = n(), .by = `Assigné à`) |> 
@@ -415,6 +419,7 @@ Allyson {data-navmenu="Par salarié"}
 ```{r}
 salarie <- data |> filter(`Assigné à` == "Allyson Pallisser")
 annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
+annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
 en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
                             (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
                             .by = Projet)
@@ -450,7 +455,7 @@ box2 <- function(data){
            Facturable == TRUE) |> 
     summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
   valueBox(n2, color = "#FF9933", 
-           caption = ifelse(n2 > 1, paste("Jours prévus dont", n2_factures, "facturés"), paste("Jour prévu dont", n2_factures, "facturé"))) 
+           caption = ifelse(abs(n2) > 1, paste("Jours prévus dont", n2_factures, "facturables"), paste("Jour prévu dont", n2_factures, "facturable"))) 
 }
 box2(en_cours)
 ```
@@ -467,7 +472,7 @@ box3 <- function(data){
     filter_all(all_vars(!grepl("déplacement|deplacement|Déplacement|Deplacement", .))) |> 
     summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
   valueBox(n3, color = "#FFCC00", 
-           caption = ifelse(n3 > 1, paste("Jours réalisés dont", n3_factures, "facturés"), paste("Jour réalisé dont", n3_factures, "facturé")))
+           caption = ifelse(abs(n3) > 1, paste("Jours réalisés dont", n3_factures, "facturables"), paste("Jour réalisé dont", n3_factures, "facturable")))
 }
 box3(en_cours)
 ```
@@ -483,7 +488,7 @@ box4 <- function(data){
            Facturable == TRUE) |> 
     summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
   valueBox(n4, color = "#339900", 
-           caption = ifelse(n4 > 1, paste("Jours restants dont", n4_factures, "facturés"), paste("Jour restant dont", n4_factures, "facturé")))
+           caption = ifelse(abs(n4) > 1, paste("Jours restants dont", n4_factures, "facturables"), paste("Jour restant dont", n4_factures, "facturable")))
 }
 box4(en_cours)
 ```
@@ -519,7 +524,7 @@ box6 <- function(data){
            Facturable == TRUE) |> 
     summarise(round(sum(`Heures prévues`, na.rm = T)/7, 0))
   valueBox(n6, color = "#FF9933", 
-           caption = ifelse(n6 > 1, paste("Jours prévus dont", n6_factures, "facturés"), paste("Jour prévu dont", n6_factures, "facturé"))) 
+           caption = ifelse(abs(n6) > 1, paste("Jours prévus dont", n6_factures, "facturables"), paste("Jour prévu dont", n6_factures, "facturable"))) 
 }
 box6(annee)
 ```
@@ -536,7 +541,7 @@ box7 <- function(data){
     filter_all(all_vars(!grepl("déplacement|deplacement|Déplacement|Deplacement", .))) |> 
     summarise(round(sum(`Heures passées`, na.rm = T)/7, 0))
   valueBox(n7, color = "#FFCC00", 
-           caption = ifelse(n7 > 1, paste("Jours réalisés dont", n7_factures, "facturés"), paste("Jour réalisé dont", n7_factures, "facturé")))
+           caption = ifelse(abs(n7) > 1, paste("Jours réalisés dont", n7_factures, "facturables"), paste("Jour réalisé dont", n7_factures, "facturable")))
 }
 box7(annee)
 ```
@@ -552,7 +557,7 @@ box8 <- function(data){
            Facturable == TRUE) |> 
     summarise(round(sum(`Heures restantes`, na.rm = T)/7, 0))
   valueBox(n8, color = "#339900", 
-           caption = ifelse(n8 > 1, paste("Jours restants dont", n8_factures, "facturés"), paste("Jour restant dont", n8_factures, "facturé")))
+           caption = ifelse(abs(n8) > 1, paste("Jours restants dont", n8_factures, "facturables"), paste("Jour restant dont", n8_factures, "facturable")))
 }
 box8(annee)
 ```
@@ -579,8 +584,7 @@ tableau_global <- function(data){
   }
   
   # Tableau des projets
-  table_projets <- data |> as.data.frame() |> 
-    filter(debut <= Sys.Date() & fin >= Sys.Date()) |> 
+  table_projets <- data |> 
     mutate(`Heures prévues` = round(`Heures prévues`, 1),
            `Heures passées` = round(`Heures passées`, 1),
            `Heures restantes` = round(`Heures restantes`, 1),
@@ -651,7 +655,7 @@ tableau_global <- function(data){
                 table.border.bottom.color = "#CCCCCC",
                 row_group.background.color = "grey")
 }
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -695,7 +699,7 @@ heures_semaine <- function(data){
     mutate(today = Sys.Date(),
            nb_week_left = round(as.numeric(difftime(fin, today, units = "weeks")), 0),
            hours_week_left = `Heures restantes` / nb_week_left) |> 
-    filter(nb_week_left > 0) |> 
+    filter(nb_week_left > 0.1) |> 
     select(Projet, todo, `Assigné à`, today, fin, nb_week_left, hours_week_left) |> 
     group_by(rn = row_number()) %>% 
     mutate(complete_date = list(seq(as.Date(today), as.Date(fin), by = 7))) |> 
@@ -866,7 +870,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -985,7 +989,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -1100,7 +1104,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -1216,7 +1220,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -1332,7 +1336,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -1446,7 +1450,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -1560,7 +1564,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -1674,7 +1678,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -1788,7 +1792,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -1906,7 +1910,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -2020,7 +2024,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -2137,7 +2141,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -2255,7 +2259,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -2373,7 +2377,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -2491,7 +2495,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -2516,123 +2520,6 @@ tryCatch(heures_semaine(salarie), error = function(e) NULL)
 tryCatch(heures_mois(salarie), error = function(e) NULL)
 ```
 
-
-
-
-
-
-
-Mathieu {data-navmenu="Par salarié"}
-=====================================  
-
-```{r}
-salarie <- data |> filter(`Assigné à` == "Mathieu Morey")
-annee <- salarie |> filter(any(debut >= "2023-01-01") | any(debut_projet >= "2023-01-01"), .by = Projet)
-en_cours <- salarie |> filter(etat_projet != "Terminé", etat_projet != "Terminé mais pas facturé",
-                            (any(debut_projet <= Sys.Date()) & any(fin_projet >= Sys.Date())) | (any(debut <= Sys.Date()) & any(fin >= Sys.Date())), 
-                            .by = Projet)
-```
-
-
-
-Column {data-width=190}
------------------------------------------------------------------------
-
-**Missions en cours** :
-
-
-### Box 1
-
-```{r echo=FALSE}
-box1(en_cours)
-```
-
-### Box 2
-
-```{r echo=FALSE}
-box2(en_cours)
-```
-
-### Box 3
-
-```{r echo=FALSE}
-box3(en_cours)
-```
-
-### Box 4
-
-```{r echo=FALSE}
-box4(en_cours)
-```
-
-
-
-
-Column {data-width=190}
------------------------------------------------------------------------
-
-**Missions en `r format(as.Date(Sys.Date(), format="%Y/%m/%d"),"%Y")`** :
-
-
-
-### Box 5
-
-```{r echo=FALSE}
-box5(annee)
-```
-
-### Box 6
-
-```{r echo=FALSE}
-box6(annee)
-```
-
-### Box 7
-
-```{r echo=FALSE}
-box7(annee)
-```
-
-### Box 8
-
-```{r echo=FALSE}
-box8(annee)
-```
-
-
-
-Column {data-width=1200}{.tabset}
------------------------------------------------------------------------
-
-
-### Tableau global
-
-    
-```{r}
-tableau_global(salarie)
-```
-
-
-### Heures prévues
-
-```{r fig.width=15, fig.height=7}
-tryCatch(heures_prevues(salarie), error = function(e) NULL)
-```
-
-
-
-### Heures restantes par semaine
-
-```{r}
-tryCatch(heures_semaine(salarie), error = function(e) NULL)
-```
-
-
-### Heures restantes par mois
-
-```{r}
-tryCatch(heures_mois(salarie), error = function(e) NULL)
-```
 
 
 
@@ -2727,7 +2614,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -2845,7 +2732,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -2963,7 +2850,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -3077,7 +2964,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
@@ -3195,7 +3082,7 @@ Column {data-width=1200}{.tabset}
 
     
 ```{r}
-tableau_global(salarie)
+tableau_global(en_cours)
 ```
 
 
